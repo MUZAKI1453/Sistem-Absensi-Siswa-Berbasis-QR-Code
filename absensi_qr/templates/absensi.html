@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-4">
+    <h3 class="mb-4">Laporan Absensi Harian</h3>
+
+    <!-- Formulir Filter dan Pencarian -->
+    <form method="GET" class="row g-3 mb-4 align-items-end">
+        <div class="col-md-3">
+            <label for="kelas" class="form-label">Filter Kelas</label>
+            <select id="kelas" name="kelas" class="form-select">
+                <option value="">-- Semua Kelas --</option>
+                {% for k in kelas_list %}
+                <option value="{{ k }}" {% if kelas == k %}selected{% endif %}>{{ k }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="searchInput" class="form-label">Cari Nama Siswa</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari nama...">
+        </div>
+        <div class="col-md-6 d-flex justify-content-end gap-2">
+            <button type="submit" class="btn btn-primary">Tampilkan</button>
+            <a href="{{ url_for('export_laporan') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Export Bulanan
+            </a>
+        </div>
+    </form>
+
+    <!-- Tabel Laporan Absensi -->
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-bordered table-striped table-hover align-middle" id="absensiTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>NIS</th>
+                    <th>Nama Siswa</th>
+                    <th>Kelas</th>
+                    <th>Status Masuk</th>
+                    <th>Status Pulang</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for nis, data in data_absensi.items() %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ data.siswa.nis }}</td>
+                    <td>{{ data.siswa.nama }}</td>
+                    <td>{{ data.siswa.kelas }}</td>
+                    <td>
+                        {% if data.masuk %}
+                            <span class="badge bg-{{ data.masuk.status | get_badge_color }}">{{ data.masuk.status }}</span>
+                            {% if data.masuk.waktu %}
+                            <br><small class="text-muted">{{ data.masuk.waktu.strftime('%H:%M') }}</small>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-danger">Alfa</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if data.pulang %}
+                            <span class="badge bg-{{ data.pulang.status | get_badge_color }}">{{ data.pulang.status }}</span>
+                            {% if data.pulang.waktu %}
+                            <br><small class="text-muted">{{ data.pulang.waktu.strftime('%H:%M') }}</small>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Belum Pulang</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <!-- Form aksi untuk ubah status manual -->
+                        <form action="{{ url_for('update_absensi', nis=nis) }}" method="POST">
+                            <input type="hidden" name="kelas" value="{{ kelas }}">
+                            <select name="status" class="form-select form-select-sm mb-1" required>
+                                <option value="" disabled selected>Ubah Status</option>
+                                <option value="Hadir">Hadir</option>
+                                <option value="Izin">Izin</option>
+                                <option value="Sakit">Sakit</option>
+                                <option value="Alfa">Alfa</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Simpan</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-3">Tidak ada data siswa ditemukan.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById("searchInput").addEventListener("keyup", function () {
+        var value = this.value.toLowerCase();
+        var table = document.getElementById("absensiTable");
+        var rows = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            // Skip the "no data" row
+            if (row.cells.length <= 1) {
+                continue;
+            }
+            // Cell index 2 is for the student name (Nama Siswa)
+            var nama = row.cells[2].textContent.toLowerCase();
+            row.style.display = nama.includes(value) ? "" : "none";
+        }
+    });
+</script>
+{% endblock %}
