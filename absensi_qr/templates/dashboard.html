@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">Dashboard Absensi Hari Ini</h2>
+
+    <!-- Bagian Statistik Keseluruhan -->
+    <div class="row g-4 text-center mb-5">
+        <!-- Kartu untuk Total Siswa -->
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-primary h-100 shadow">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h4 class="card-title">{{ total_siswa }}</h4>
+                    <p class="card-text">Total Siswa</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kartu untuk Total Kelas -->
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-secondary h-100 shadow">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h4 class="card-title">{{ total_kelas }}</h4>
+                    <p class="card-text">Total Kelas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bagian Statistik Absensi Harian -->
+    <div class="row g-4 text-center">
+        <!-- Kartu untuk Hadir -->
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-success h-100 shadow">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h4 class="card-title">{{ total_hadir }}</h4>
+                    <p class="card-text">Hadir Hari Ini</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kartu untuk Sakit -->
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-warning h-100 shadow">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h4 class="card-title">{{ total_sakit }}</h4>
+                    <p class="card-text">Sakit Hari Ini</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kartu untuk Izin -->
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-info h-100 shadow">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h4 class="card-title">{{ total_izin }}</h4>
+                    <p class="card-text">Izin Hari Ini</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kartu untuk Alfa -->
+        <div class="col-6 col-md-3">
+            <div class="card text-bg-danger h-100 shadow">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h4 class="card-title">{{ total_alfa }}</h4>
+                    <p class="card-text">Alfa Hari Ini</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
