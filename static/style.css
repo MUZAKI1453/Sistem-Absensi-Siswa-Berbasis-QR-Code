@@ -1,0 +1,42 @@
+/* file: static/css/style.css */
+
+/* Gaya untuk semua tombol navbar */
+.btn-custom {
+    color: #ffffff;
+    background-color: #343a40;
+    border: 1px solid #495057;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin: 0 5px;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Efek hover untuk tombol */
+.btn-custom:hover {
+    color: #fff;
+    background-color: #495057;
+    border-color: #6c757d;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Tombol aktif */
+.btn-custom.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+    transform: none;
+}
+
+/* Gaya khusus untuk tombol logout */
+.btn-logout {
+    background-color: #dc3545 !important; /* Merah */
+    border-color: #dc3545 !important;
+}
+
+.btn-logout:hover {
+    background-color: #c82333 !important; /* Merah yang lebih gelap saat dihover */
+    border-color: #bd2130 !important;
+}

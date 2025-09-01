@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Atur Waktu Absensi</h2>
+
+    <form method="POST" action="{{ url_for('atur_waktu') }}">
+        <!-- Grup Input untuk Jam Masuk -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="jam_masuk_mulai" class="form-label">Jam Masuk Mulai:</label>
+                <input type="time" id="jam_masuk_mulai" name="jam_masuk_mulai" class="form-control"
+                       value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="jam_masuk_selesai" class="form-label">Jam Masuk Selesai:</label>
+                <input type="time" id="jam_masuk_selesai" name="jam_masuk_selesai" class="form-control"
+                       value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}" required>
+            </div>
+        </div>
+
+        <!-- Grup Input untuk Jam Pulang -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="jam_pulang_mulai" class="form-label">Jam Pulang Mulai:</label>
+                <input type="time" id="jam_pulang_mulai" name="jam_pulang_mulai" class="form-control"
+                       value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}" required>
+            </div>
+            <div class="col-md-6">
+                <label for="jam_pulang_selesai" class="form-label">Jam Pulang Selesai:</label>
+                <input type="time" id="jam_pulang_selesai" name="jam_pulang_selesai" class="form-control"
+                       value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}" required>
+            </div>
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary">Simpan</button>
+            <a href="{{ url_for('reset_waktu') }}" class="btn btn-danger"
+               onclick="return confirm('Yakin ingin reset waktu? Tindakan ini tidak dapat dibatalkan.')">Reset Waktu</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
