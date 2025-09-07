@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container my-4">
+<h3 class="mb-4">Ekspor Laporan Kehadiran</h3>
+<p class="text-muted">Pilih opsi di bawah ini untuk mengunduh laporan kehadiran.</p>
+
+<div class="card p-4 shadow-sm mb-4">
+    <h5 class="mb-3">Ekspor Bulanan</h5>
+    <form method="POST" action="{{ url_for('export_laporan') }}">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <label for="bulan" class="form-label">Bulan & Tahun</label>
+                <input type="month" id="bulan" name="bulan" class="form-control" value="{{ default_bulan }}" required>
+            </div>
+            <div class="col-md-5">
+                <label for="kelas" class="form-label">Kelas</label>
+                <select id="kelas" name="kelas" class="form-select" required>
+                    <option value="" disabled selected>-- Pilih Kelas --</option>
+                    {% for k in kelas_list %}
+                    <option value="{{ k }}">{{ k }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-file-earmark-excel"></i> Export
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="card p-4 shadow-sm">
+    <h5 class="mb-3">Ekspor Harian</h5>
+    <p class="text-muted">Klik tombol di bawah ini untuk mengunduh laporan kehadiran harian untuk hari ini.</p>
+    <!-- Tombol baru untuk ekspor harian, terhubung ke rute baru -->
+    <a href="{{ url_for('export_harian_excel') }}" class="btn btn-primary">
+        <i class="bi bi-file-earmark-excel"></i> Export Harian (Excel)
+    </a>
+</div>
+
+</div>
+{% endblock %}
