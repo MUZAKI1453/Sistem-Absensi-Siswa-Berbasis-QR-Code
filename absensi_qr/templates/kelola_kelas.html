@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Kelas{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahKelasModal">
+            <i class="bi bi-plus-circle me-2"></i>Tambah Kelas
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Kelas</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr class="bg-light">
+                            <th>No</th>
+                            <th>Nama Kelas</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for kelas_data in kelas %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ kelas_data.nama }}</td>
+                            <td class="text-nowrap">
+                                <button type="button" class="btn btn-warning btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editKelasModal{{ kelas_data.id }}">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <a href="{{ url_for('hapus_kelas', id=kelas_data.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Apakah Anda yakin ingin menghapus kelas ini?')"><i class="bi bi-trash"></i> Hapus</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">Belum ada data kelas.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tambahKelasModal" tabindex="-1" aria-labelledby="tambahKelasModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('kelola_kelas') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tambahKelasModalLabel">Tambah Data Kelas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nama_kelas_tambah" class="form-label">Nama Kelas</label>
+                        <input type="text" class="form-control" id="nama_kelas_tambah" name="nama_kelas" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Tambahkan Kelas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for kelas_data in kelas %}
+<div class="modal fade" id="editKelasModal{{ kelas_data.id }}" tabindex="-1" aria-labelledby="editKelasModalLabel{{ kelas_data.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('kelola_kelas') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editKelasModalLabel{{ kelas_data.id }}">Edit Data Kelas</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="edit_id" value="{{ kelas_data.id }}">
+                    <div class="mb-3">
+                        <label for="nama_kelas_edit{{ kelas_data.id }}" class="form-label">Nama Kelas</label>
+                        <input type="text" class="form-control" id="nama_kelas_edit{{ kelas_data.id }}" name="nama_kelas" value="{{ kelas_data.nama }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
