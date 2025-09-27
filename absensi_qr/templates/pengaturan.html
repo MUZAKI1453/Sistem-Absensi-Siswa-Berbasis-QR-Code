@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h3 class="display-6 fw-bold text-dark">Pengaturan Sistem</h3>
+        <p class="lead text-muted">Kelola semua pengaturan penting untuk sistem absensi.</p>
+    </div>
+
+    <div class="card p-4 shadow-lg border-0 rounded-4 mb-4 d-flex justify-content-center">
+        <button class="btn btn-primary btn-lg rounded-pill px-5" data-bs-toggle="modal" data-bs-target="#aturWaktuModal">Atur Waktu Absensi</button>
+    </div>
+
+    <!-- Modal Atur Waktu -->
+    <div class="modal fade" id="aturWaktuModal" tabindex="-1" aria-labelledby="aturWaktuModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="aturWaktuModalLabel">Atur Waktu Absensi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('pengaturan') }}">
+                    <div class="modal-body">
+                        <!-- Waktu Masuk -->
+                        <div class="mb-3">
+                            <label for="jam_masuk_mulai" class="form-label">Jam Masuk Mulai</label>
+                            <input type="time" id="jam_masuk_mulai" name="jam_masuk_mulai" class="form-control"
+                                value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="jam_masuk_selesai" class="form-label">Jam Masuk Selesai</label>
+                            <input type="time" id="jam_masuk_selesai" name="jam_masuk_selesai" class="form-control"
+                                value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}" required>
+                        </div>
+
+                        <!-- Batas Waktu Terlambat -->
+                        <div class="mb-3">
+                            <label for="jam_terlambat_selesai" class="form-label">Batas Waktu Terlambat</label>
+                            <input type="time" class="form-control" id="jam_terlambat_selesai" name="jam_terlambat_selesai"
+                                value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai }}">
+                            <div class="form-text">Siswa yang scan antara jam masuk selesai hingga jam ini akan dianggap Terlambat.</div>
+                        </div>
+
+                        <!-- Waktu Pulang -->
+                        <div class="mb-3">
+                            <label for="jam_pulang_mulai" class="form-label">Jam Pulang Mulai</label>
+                            <input type="time" id="jam_pulang_mulai" name="jam_pulang_mulai" class="form-control"
+                                value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="jam_pulang_selesai" class="form-label">Jam Pulang Selesai</label>
+                            <input type="time" id="jam_pulang_selesai" name="jam_pulang_selesai" class="form-control"
+                                value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" name="action" value="reset" class="btn btn-danger"
+                                onclick="return confirm('Apakah Anda yakin ingin mereset semua pengaturan waktu? Tindakan ini tidak dapat dibatalkan.');">Reset Waktu</button>
+                        <button type="submit" name="action" value="save" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
