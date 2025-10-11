@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container my-5">
+    <h3 class="mb-4">📤 Export Laporan Absensi</h3>
+
+    <!-- FORM EKSPOR -->
+    <form method="POST" action="{{ url_for('export_bp.export_laporan') }}" class="card p-4 shadow-sm">
+
+        <!-- Pilih Jenis Data -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Pilih Jenis Data:</label>
+            <select class="form-select" name="tipe_data" required>
+                <option value="siswa">Siswa</option>
+                <option value="pegawai">Pegawai</option>
+            </select>
+        </div>
+
+        <!-- Pilih Jenis Laporan -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Pilih Jenis Laporan:</label>
+            <select class="form-select" id="jenis_laporan" name="jenis_laporan" required onchange="toggleTanggalInput()">
+                <option value="harian">Harian</option>
+                <option value="bulanan">Bulanan</option>
+            </select>
+        </div>
+
+        <!-- Input Tanggal Harian -->
+        <div class="mb-3" id="harian_field">
+            <label class="form-label fw-bold">Tanggal:</label>
+            <input type="date" class="form-control" name="tanggal">
+        </div>
+
+        <!-- Input Bulan & Tahun -->
+        <div class="row mb-3 d-none" id="bulanan_field">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Bulan:</label>
+                <input type="number" class="form-control" name="bulan" min="1" max="12" placeholder="1-12">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tahun:</label>
+                <input type="number" class="form-control" name="tahun" min="2020" value="{{ current_year }}">
+            </div>
+        </div>
+
+        <!-- Format File -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Format File:</label>
+            <select class="form-select" name="format_file" required>
+                <option value="xlsx">Excel (.xlsx)</option>
+                <option value="csv">CSV (.csv)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3 w-100">Download Laporan</button>
+    </form>
+</div>
+
+<script>
+function toggleTanggalInput() {
+    const jenis = document.getElementById('jenis_laporan').value;
+    const harianField = document.getElementById('harian_field');
+    const bulananField = document.getElementById('bulanan_field');
+
+    if (jenis === "harian") {
+        harianField.classList.remove("d-none");
+        bulananField.classList.add("d-none");
+    } else {
+        harianField.classList.add("d-none");
+        bulananField.classList.remove("d-none");
+    }
+}
+</script>
+
+{% endblock %}

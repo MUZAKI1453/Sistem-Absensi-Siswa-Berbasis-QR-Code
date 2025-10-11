@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-center min-vh-100 p-4">
+    <div class="w-100" style="max-width: 400px;">
+        <div class="card shadow-lg p-4 text-center">
+            <h3 class="card-title text-2xl font-semibold mb-2">Scan QR Code untuk Absen</h3>
+            <p class="text-sm text-muted mb-4">Arahkan kamera ke QR Code siswa atau pegawai.</p>
+
+            <!-- Container untuk pemindai QR Code -->
+            <div id="reader" class="w-100 rounded-lg overflow-hidden mb-4"></div>
+
+            <!-- Kotak pesan untuk menampilkan status absensi -->
+            <div id="message-box" class="d-none min-h-12 w-100 p-3 font-semibold rounded-lg d-flex align-items-center justify-content-center transition-all duration-300"></div>
+
+            <!-- Loading spinner -->
+            <div id="loading-spinner" class="d-none my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Library Html5Qrcode -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+    // Inisialisasi elemen-elemen DOM
+    const messageBox = document.getElementById('message-box');
+    const loadingSpinner = document.getElementById('loading-spinner');
+
+    // Buat instance dari Html5QrcodeScanner
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", {
+            fps: 10,
+            qrbox: {
+                width: 250,
+                height: 250
+            },
+            rememberLastUsedCamera: true
+        },
+        /* verbose= */
+        false
+    );
+
+    /**
+     * Menampilkan pesan di kotak pesan dengan gaya yang sesuai.
+     * @param {string} type - Tipe pesan: 'success', 'danger', atau 'warning'.
+     * @param {string} message - Teks pesan yang akan ditampilkan.
+     */
+    function showMessage(type, message) {
+        messageBox.classList.remove('bg-success-subtle', 'text-success', 'bg-danger-subtle', 'text-danger', 'bg-warning-subtle', 'text-warning');
+        messageBox.classList.remove('d-none');
+
+        let colorClass;
+        if (type === 'success') {
+            colorClass = 'bg-success-subtle text-success';
+        } else if (type === 'danger') {
+            colorClass = 'bg-danger-subtle text-danger';
+        } else { // Default ke warning
+            colorClass = 'bg-warning-subtle text-warning';
+        }
+
+        // Pastikan warna teks sudah benar (misalnya text-success untuk bg-success-subtle)
+        messageBox.className = `min-h-12 w-100 p-3 fw-bold rounded-lg d-flex align-items-center justify-content-center ${colorClass}`;
+        messageBox.textContent = message;
+    }
+
+    /**
+     * Fungsi yang dipanggil saat pemindaian berhasil.
+     * @param {string} decodedText - Teks yang berhasil didekode dari QR Code.
+     */
+    async function onScanSuccess(decodedText) {
+        // Hentikan pemindaian untuk menghindari duplikat
+        html5QrcodeScanner.pause();
+
+        // Sembunyikan pesan dan tampilkan spinner
+        messageBox.classList.add('d-none');
+        loadingSpinner.classList.remove('d-none');
+
+        try {
+            // =========================================================================
+            // PERUBAHAN KRUSIAL: HAPUS VALIDASI FRONTEND LAMA
+            // Kita sekarang mengirimkan decodedText MENTAH ke server.
+            // Server (app.py) yang akan melakukan parsing prefiks 'S' atau 'P'.
+            // =========================================================================
+
+            // Kirim data mentah (misalnya S12345 atau P001) ke server
+            const res = await fetch("/submit_scan", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                // Kirim seluruh decodedText sebagai parameter 'identifier'
+                body: `identifier=${encodeURIComponent(decodedText)}`
+            });
+
+            // Tunggu respons JSON dari server dan parse
+            const data = await res.json();
+
+            // Panggil fungsi showMessage() secara langsung dengan data yang diterima
+            showMessage(data.status, data.message);
+
+        } catch (error) {
+            console.error('Error:', error);
+            // Jika ada error jaringan atau parsing, tampilkan pesan generik
+            showMessage('danger', 'Terjadi kesalahan jaringan atau server tidak merespon.');
+        } finally {
+            // Sembunyikan spinner
+            loadingSpinner.classList.add('d-none');
+
+            // Lanjutkan pemindaian secara otomatis
+            setTimeout(() => {
+                messageBox.classList.add('d-none');
+                html5QrcodeScanner.resume();
+            }, 3000); // Tunggu 3 detik sebelum melanjutkan
+        }
+    }
+
+    /**
+     * Fungsi yang dipanggil saat pemindaian gagal.
+     * Dikosongkan agar tidak ada error yang muncul di konsol.
+     */
+    function onScanFailure(error) {
+        // Biarkan kosong
+    }
+
+    // Render pemindai QR Code di dalam elemen 'reader'
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+</script>
+{% endblock %}

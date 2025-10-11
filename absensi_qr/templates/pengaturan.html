@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- FALLBACK VARIABLES UNTUK MENGHINDARI UNDEFINED ERROR SAAT DIMUAT DARI ROUTE HANYA SISWA -->
+{% set setting_guru_staf = setting_guru_staf if setting_guru_staf is defined else None %}
+{% set settings_keamanan = settings_keamanan if settings_keamanan is defined else {} %}
+{% set setting_siswa_data = setting if setting is defined else None %}
+
+<!-- PERBAIKAN KRITIS: Memaksa variabel 'shifts' menjadi 4 elemen statis untuk memastikan rendering 4 tab dan form. -->
+{% set shifts = ['shift1', 'shift2', 'shift3', 'shift4'] %}
+
+
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h3 class="display-6 fw-bold text-dark">Pengaturan Sistem Absensi</h3>
+        <p class="lead text-muted">Pilih kategori pengguna yang ingin Anda atur jadwal absensinya.</p>
+    </div>
+
+    <!-- Container Dua Tombol di Halaman Utama -->
+    <div class="row g-4 justify-content-center">
+        <!-- Tombol 1: Siswa -->
+        <div class="col-lg-5 col-md-6">
+            <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-primary text-white">
+                <div class="text-center">
+                    <i class="bi bi-mortarboard-fill h1 mb-3"></i>
+                    <h5 class="fw-bold">Pengaturan Waktu Siswa</h5>
+                    <p class="mb-4">Atur jadwal masuk, terlambat, dan pulang yang berlaku untuk siswa.</p>
+                    <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#aturWaktuSiswaModal">
+                        Atur Siswa
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol 2: Pegawai -->
+        <div class="col-lg-5 col-md-6">
+            <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-warning text-dark">
+                 <div class="text-center">
+                    <i class="bi bi-person-workspace h1 mb-3"></i>
+                    <h5 class="fw-bold">Pengaturan Waktu Pegawai</h5>
+                    <p class="mb-4">Atur jadwal untuk Guru, Staf, dan Shift Keamanan.</p>
+                    <button class="btn btn-dark btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#aturWaktuPegawaiModal">
+                        Atur Pegawai
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- MODAL: ATUR WAKTU SISWA -->
+<div class="modal fade" id="aturWaktuSiswaModal" tabindex="-1" aria-labelledby="aturWaktuSiswaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="aturWaktuSiswaModalLabel">Atur Waktu Absensi Siswa</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form method="POST" action="{{ url_for('pengaturan') }}">
+        <div class="modal-body">
+          <input type="hidden" name="setting_type" value="siswa">
+
+          <!-- 1. WAKTU MASUK -->
+          <div class="card card-body shadow-sm mb-4">
+            <h6 class="text-primary fw-bold mb-3">1. Waktu Masuk</h6>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="jam_masuk_mulai_s" class="form-label">Mulai Absen Masuk</label>
+                <input type="time" id="jam_masuk_mulai_s" name="jam_masuk_mulai" class="form-control"
+                       value="{{ setting_siswa_data.jam_masuk_mulai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_masuk_mulai else '' }}" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="jam_masuk_selesai_s" class="form-label">Akhir Absen Masuk</label>
+                <input type="time" id="jam_masuk_selesai_s" name="jam_masuk_selesai" class="form-control"
+                       value="{{ setting_siswa_data.jam_masuk_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_masuk_selesai else '' }}" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. BATAS TERLAMBAT -->
+          <div class="card card-body shadow-sm mb-4">
+            <h6 class="text-danger fw-bold mb-3">2. Batas Terlambat</h6>
+            <label for="jam_terlambat_selesai_s" class="form-label">Batas Scan Terlambat</label>
+            <input type="time" class="form-control" id="jam_terlambat_selesai_s" name="jam_terlambat_selesai"
+                   value="{{ setting_siswa_data.jam_terlambat_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_terlambat_selesai else '' }}">
+            <div class="form-text">Scan antara <b>Akhir Absen Masuk</b> dan waktu ini dianggap <b>Terlambat</b>.</div>
+          </div>
+
+          <!-- 3. WAKTU PULANG -->
+          <div class="card card-body shadow-sm">
+            <h6 class="text-success fw-bold mb-3">3. Waktu Pulang</h6>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="jam_pulang_mulai_s" class="form-label">Mulai Absen Pulang</label>
+                <input type="time" id="jam_pulang_mulai_s" name="jam_pulang_mulai" class="form-control"
+                       value="{{ setting_siswa_data.jam_pulang_mulai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_pulang_mulai else '' }}" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="jam_pulang_selesai_s" class="form-label">Akhir Absen Pulang</label>
+                <input type="time" id="jam_pulang_selesai_s" name="jam_pulang_selesai" class="form-control"
+                       value="{{ setting_siswa_data.jam_pulang_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_pulang_selesai else '' }}" required>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer d-flex justify-content-between">
+          {% raw %}
+          <!-- NOTE: data-api-url digunakan agar JS tidak perlu meletakkan {{ }} di dalam string JS -->
+          {% endraw %}
+          <button type="button"
+                  id="btnResetSiswa"
+                  class="btn btn-warning"
+                  data-api-url="{{ url_for('api_get_setting_siswa') }}">
+            🔄 Reset Form
+          </button>
+
+          <button type="submit" name="action" value="save_siswa" class="btn btn-primary">💾 Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- JS: Reset form via fetch; aman (tidak auto-open modal on reload) -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const btnReset = document.getElementById("btnResetSiswa");
+  if (!btnReset) return;
+
+  const apiUrl = btnReset.dataset.apiUrl; // aman, diisi oleh data-api-url
+
+  btnReset.addEventListener("click", async function () {
+    if (!confirm("Yakin ingin mereset form ke pengaturan terakhir tersimpan?")) return;
+
+    try {
+      const resp = await fetch(apiUrl + "?_=" + Date.now(), {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        credentials: "same-origin"
+      });
+
+      if (!resp.ok) {
+        throw new Error("Response not OK: " + resp.status);
+      }
+
+      const data = await resp.json();
+
+      // isi form dengan data dari server (atau kosongkan)
+      document.getElementById("jam_masuk_mulai_s").value = data.jam_masuk_mulai || "";
+      document.getElementById("jam_masuk_selesai_s").value = data.jam_masuk_selesai || "";
+      document.getElementById("jam_terlambat_selesai_s").value = data.jam_terlambat_selesai || "";
+      document.getElementById("jam_pulang_mulai_s").value = data.jam_pulang_mulai || "";
+      document.getElementById("jam_pulang_selesai_s").value = data.jam_pulang_selesai || "";
+
+      // pastikan modal tetap terbuka (seharusnya tombol ada di modal)
+      const modalEl = document.getElementById('aturWaktuSiswaModal');
+      if (modalEl) {
+        const bsModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+        bsModal.show();
+      }
+    } catch (err) {
+      console.error("Reset error:", err);
+      alert("Gagal mengambil pengaturan dari server. Cek console untuk detail.");
+    }
+  });
+});
+</script>
+
+
+
+
+    <!-- ============================================= -->
+    <!-- MODAL 2: ATUR WAKTU PEGAWAI (Rapih Vertikal) -->
+    <!-- ============================================= -->
+    <div class="modal fade" id="aturWaktuPegawaiModal" tabindex="-1" aria-labelledby="aturWaktuPegawaiModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold" id="aturWaktuPegawaiModalLabel">Atur Waktu Absensi Pegawai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <p class="lead text-muted text-center">Kelola waktu absensi spesifik untuk Guru, Staf, dan setiap Shift Keamanan.</p>
+
+                    <!-- Nav Tabs Pegawai -->
+                    <ul class="nav nav-tabs mb-4" id="pegawaiSettingsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="guru-staf-tab" data-bs-toggle="tab" data-bs-target="#guru-staf" type="button" role="tab" aria-controls="guru-staf" aria-selected="true">
+                                Guru & Staf
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="keamanan-tab" data-bs-toggle="tab" data-bs-target="#keamanan" type="button" role="tab" aria-controls="keamanan" aria-selected="false">
+                                Keamanan (Multi-Shift)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="pegawaiSettingsTabContent">
+
+                        <!-- TAB 1: GURU & STAF (RINGKAS & RAPIH) -->
+                        <div class="tab-pane fade show active" id="guru-staf" role="tabpanel" aria-labelledby="guru-staf-tab">
+                            <h5 class="fw-bold mb-3 text-primary">Waktu Guru & Staf</h5>
+                            <p class="text-muted mb-4">Berlaku untuk semua pegawai dengan Role **Guru** dan **Staf**.</p>
+
+                            {% set setting = setting_guru_staf %}
+                            <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" class="mt-4">
+                                <input type="hidden" name="setting_type" value="guru_staf">
+
+                                <div class="card card-body shadow-lg mb-4 p-4 border-2 border-primary">
+
+                                    <!-- Bagian 1: Waktu Masuk (Mulai & Akhir, Berdampingan) -->
+                                    <div class="mb-4 pb-3 border-bottom border-primary">
+                                        <h6 class="text-primary fw-bold mb-3"><i class="bi bi-clock-fill me-2"></i>Rentang Waktu Masuk</h6>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="gsmulai" class="form-label small fw-semibold">Mulai Absen Masuk</label>
+                                                <input type="time" id="gsmulai" name="jam_masuk_mulai" class="form-control"
+                                                    value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="gsselesai" class="form-label small fw-semibold">Akhir Absen Masuk</label>
+                                                <input type="time" id="gsselesai" name="jam_masuk_selesai" class="form-control"
+                                                    value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bagian 2: Batas Terlambat (Tepat di bawah Masuk) -->
+                                    <div class="mb-4 pb-3 border-bottom border-danger">
+                                        <h6 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Batas Terlambat</h6>
+                                        <div class="row justify-content-center">
+                                            <div class="col-md-6">
+                                                <label for="gstelat" class="form-label small fw-semibold">Batas Scan Terlambat (Waktu Akhir)</label>
+                                                <input type="time" class="form-control" id="gstelat" name="jam_terlambat_selesai"
+                                                    value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai else '' }}">
+                                                <div class="form-text text-danger small">Scan setelah Akhir Masuk hingga jam ini dianggap **Terlambat**.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bagian 3: Waktu Pulang (Mulai & Akhir, Berdampingan) -->
+                                    <div class="mt-2 pt-3">
+                                        <h6 class="text-success fw-bold mb-3"><i class="bi bi-house-door-fill me-2"></i>Rentang Waktu Pulang</h6>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="gspulangmulai" class="form-label small fw-semibold">Mulai Absen Pulang</label>
+                                                <input type="time" id="gspulangmulai" name="jam_pulang_mulai" class="form-control"
+                                                    value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="gspulangselesai" class="form-label small fw-semibold">Akhir Absen Pulang</label>
+                                                <input type="time" id="gspulangselesai" name="jam_pulang_selesai" class="form-control"
+                                                    value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-between pt-3 border-top">
+                                    <button type="submit" name="action" value="reset" class="btn btn-outline-danger"
+                                            {% if not setting or not setting.id %}disabled{% endif %}
+                                            onclick="return confirm('Yakin ingin mereset waktu Guru & Staf?');">
+                                        Reset Waktu
+                                    </button>
+                                    <button type="submit" name="action" value="save" class="btn btn-primary px-5">Simpan Pengaturan Guru/Staf</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- TAB 2: KEAMANAN (MULTI-SHIFT) (RINGKAS & RAPIH) -->
+                        <div class="tab-pane fade" id="keamanan" role="tabpanel" aria-labelledby="keamanan-tab">
+                            <h5 class="fw-bold mb-3 text-success">Waktu Keamanan (4 Shift)</h5>
+                            <p class="text-muted">Atur rentang waktu absensi yang unik untuk setiap shift.</p>
+
+                            <!-- Nav Pills for Shifts (Looping untuk 4 shift) -->
+                            <ul class="nav nav-pills mb-3 border-bottom pb-3" id="pills-tab" role="tablist">
+                                <!-- Perulangan ini sekarang dijamin berjalan 4 kali -->
+                                {% for shift_name in shifts %}
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {% if loop.first %}active{% endif %}" id="pills-{{ shift_name }}-tab" data-bs-toggle="pill" data-bs-target="#pills-{{ shift_name }}" type="button" role="tab" aria-controls="pills-{{ shift_name }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                        {{ shift_name.capitalize().replace('shift', 'Shift ') }}
+                                    </button>
+                                </li>
+                                {% endfor %}
+                                <!-- Button to Reset All Shifts -->
+                                <li class="nav-item ms-auto" role="presentation">
+                                    <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" id="resetAllKeamananForm">
+                                        <input type="hidden" name="action" value="reset">
+                                        <input type="hidden" name="setting_type" value="keamanan_all">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger mt-1"
+                                                onclick="return confirm('PERINGATAN! Ini akan mereset SEMUA pengaturan Shift Keamanan (1, 2, 3, dan 4). Lanjutkan?');">
+                                            Reset Semua Shift
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+
+                            <!-- Konten Shift Tabs (Looping untuk 4 shift) -->
+                            <div class="tab-content" id="pills-tabContent">
+                                {% for shift_name in shifts %}
+                                <!-- Ambil data setting untuk shift ini, akan bernilai None jika belum tersimpan -->
+                                {% set setting = settings_keamanan.get(shift_name) %}
+
+                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="pills-{{ shift_name }}" role="tabpanel" aria-labelledby="pills-{{ shift_name }}-tab">
+
+                                    <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" class="mt-4 p-3 border rounded-3 bg-light">
+                                        <input type="hidden" name="setting_type" value="{{ shift_name }}">
+                                        <h6 class="text-muted border-bottom pb-2 mb-3 fw-bold">{{ shift_name.capitalize().replace('shift', 'Pengaturan Shift ') }}</h6>
+
+                                        <div class="card card-body shadow-sm mb-4 p-4 border-2 border-success">
+
+                                            <!-- Bagian 1: Waktu Masuk (Mulai & Akhir, Berdampingan) -->
+                                            <div class="mb-4 pb-3 border-bottom border-primary">
+                                                <h6 class="text-primary fw-bold mb-3"><i class="bi bi-clock-fill me-2"></i>Rentang Waktu Masuk</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="{{ shift_name }}_masuk_mulai" class="form-label small fw-semibold">Mulai Absen Masuk</label>
+                                                        <input type="time" id="{{ shift_name }}_masuk_mulai" name="jam_masuk_mulai" class="form-control"
+                                                            value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}" required>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="{{ shift_name }}_masuk_selesai" class="form-label small fw-semibold">Akhir Absen Masuk</label>
+                                                        <input type="time" id="{{ shift_name }}_masuk_selesai" name="jam_masuk_selesai" class="form-control"
+                                                            value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Bagian 2: Batas Terlambat (Tepat di bawah Masuk) -->
+                                            <div class="mb-4 pb-3 border-bottom border-danger">
+                                                <h6 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Batas Terlambat</h6>
+                                                <div class="row justify-content-center">
+                                                    <div class="col-md-6">
+                                                        <label for="{{ shift_name }}_terlambat" class="form-label small fw-semibold">Batas Scan Terlambat (Waktu Akhir)</label>
+                                                        <input type="time" class="form-control" id="{{ shift_name }}_terlambat" name="jam_terlambat_selesai"
+                                                            value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai else '' }}">
+                                                        <div class="form-text text-danger small">Scan setelah Akhir Masuk hingga jam ini dianggap **Terlambat**.</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Bagian 3: Waktu Pulang (Mulai & Akhir, Berdampingan) -->
+                                            <div class="mt-2 pt-3">
+                                                <h6 class="text-success fw-bold mb-3"><i class="bi bi-house-door-fill me-2"></i>Rentang Waktu Pulang</h6>
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="{{ shift_name }}_pulang_mulai" class="form-label small fw-semibold">Mulai Absen Pulang</label>
+                                                        <input type="time" id="{{ shift_name }}_pulang_mulai" name="jam_pulang_mulai" class="form-control"
+                                                            value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}" required>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="{{ shift_name }}_pulang_selesai" class="form-label small fw-semibold">Akhir Absen Pulang</label>
+                                                        <input type="time" id="{{ shift_name }}_pulang_selesai" name="jam_pulang_selesai" class="form-control"
+                                                            value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex justify-content-between pt-3 border-top mt-3">
+                                            <button type="submit" name="action" value="reset" class="btn btn-outline-danger"
+                                                    {% if not setting or not setting.id %}disabled{% endif %}
+                                                    onclick="return confirm('Yakin ingin mereset waktu {{ shift_name.capitalize().replace('shift', 'Shift ') }}?');">
+                                                Reset Waktu
+                                            </button>
+                                            <button type="submit" name="action" value="save" class="btn btn-success px-5">Simpan Pengaturan {{ shift_name.capitalize().replace('shift', 'Shift ') }}</button>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <!-- END of Konten Shift Tabs -->
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}
