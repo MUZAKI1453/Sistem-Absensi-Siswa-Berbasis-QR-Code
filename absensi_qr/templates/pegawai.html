@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Pegawai{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-end mb-3 gap-2">
+        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#filterModal">
+            <i class="bi bi-search me-2"></i>Cari & Filter
+        </button>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-file-earmark-arrow-up me-2"></i>Import dari CSV
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahPegawaiModal">
+            <i class="bi bi-plus-circle me-2"></i>Tambah Pegawai
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Pegawai</h5>
+            {% if cari_nama or filter_role %}
+                <a href="{{ url_for('pegawai_bp.pegawai') }}" class="btn btn-danger btn-sm">
+                    <i class="bi bi-x-circle me-2"></i>Reset Filter
+                </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr class="bg-light">
+                            <th>No</th>
+                            <th>No ID</th>
+                            <th>Nama</th>
+                            <th>Role</th>
+                            <th>QR Code</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pegawai_data in pegawai %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ pegawai_data.no_id }}</td>
+                            <td>{{ pegawai_data.nama }}</td>
+                            <td>{{ pegawai_data.role }}</td>
+                            <td>
+                                <img src="{{ url_for('pegawai_bp.view_qr_pegawai', no_id=pegawai_data.no_id) }}" alt="QR Code" style="width: 50px; height: auto;">
+                            </td>
+                            <td class="text-nowrap">
+                                <a href="{{ url_for('pegawai_bp.pegawai', edit_id=pegawai_data.id) }}" class="btn btn-warning btn-sm me-1">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <a href="{{ url_for('pegawai_bp.hapus_pegawai', id=pegawai_data.id) }}" class="btn btn-danger btn-sm me-1" onclick="return confirm('Apakah Anda yakin ingin menghapus data pegawai ini?')">
+                                    <i class="bi bi-trash"></i> Hapus
+                                </a>
+                                <a href="{{ url_for('pegawai_bp.download_qr_pegawai', no_id=pegawai_data.no_id) }}" class="btn btn-info btn-sm text-white">
+                                    <i class="bi bi-download"></i> Download QR
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Belum ada data pegawai.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Import CSV -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Impor Data Pegawai dari CSV</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info" role="alert">
+                    <h4 class="alert-heading">Catatan Penulisan File CSV</h4>
+                    <p>File CSV harus memiliki kolom <strong>no_id, nama, role</strong> dengan urutan yang sama (tanpa spasi). Contoh:</p>
+                    <pre>no_id,nama,role
+001,John Doe,guru
+002,Jane Smith,staf</pre>
+                    <hr>
+                    <p class="mb-0">Role harus salah satu dari 'guru', 'staf', atau 'keamanan'.</p>
+                </div>
+
+                <form action="{{ url_for('pegawai_bp.import_pegawai') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="csvFile" class="form-label">Pilih File CSV</label>
+                        <input class="form-control" type="file" id="csvFile" name="csv_file" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Import Data</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Pegawai -->
+<div class="modal fade" id="tambahPegawaiModal" tabindex="-1" aria-labelledby="tambahPegawaiModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('pegawai_bp.pegawai') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tambahPegawaiModalLabel">Tambah Data Pegawai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="no_id" class="form-label">No ID</label>
+                        <input type="text" class="form-control" id="no_id" name="no_id" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nama" class="form-label">Nama</label>
+                        <input type="text" class="form-control" id="nama" name="nama" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="" disabled selected>Pilih Role</option>
+                            <option value="guru">Guru</option>
+                            <option value="staf">Staf</option>
+                            <option value="keamanan">Keamanan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Tambahkan Pegawai</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Pegawai -->
+<div class="modal fade" id="editPegawaiModal" tabindex="-1" aria-labelledby="editPegawaiModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('pegawai_bp.pegawai') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPegawaiModalLabel">Edit Data Pegawai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit-id" name="edit_id" value="{{ pegawai_edit.id if pegawai_edit else '' }}">
+                    <div class="mb-3">
+                        <label for="edit-no_id" class="form-label">No ID</label>
+                        <input type="text" class="form-control" id="edit-no_id" name="no_id" value="{{ pegawai_edit.no_id if pegawai_edit else '' }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-nama" class="form-label">Nama</label>
+                        <input type="text" class="form-control" id="edit-nama" name="nama" value="{{ pegawai_edit.nama if pegawai_edit else '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-role" class="form-label">Role</label>
+                        <select class="form-select" id="edit-role" name="role" required>
+                            <option value="guru" {% if pegawai_edit and pegawai_edit.role == 'guru' %}selected{% endif %}>Guru</option>
+                            <option value="staf" {% if pegawai_edit and pegawai_edit.role == 'staf' %}selected{% endif %}>Staf</option>
+                            <option value="keamanan" {% if pegawai_edit and pegawai_edit.role == 'keamanan' %}selected{% endif %}>Keamanan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Filter -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('pegawai_bp.pegawai') }}" method="get">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Cari & Filter Pegawai</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cari_nama" class="form-label">Nama Pegawai</label>
+                        <input type="text" class="form-control" id="cari_nama" name="cari_nama" value="{{ cari_nama or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="filter_role" class="form-label">Filter Role</label>
+                        <select class="form-select" id="filter_role" name="filter_role">
+                            <option value="">-- Semua Role --</option>
+                            <option value="guru" {% if filter_role == 'guru' %}selected{% endif %}>Guru</option>
+                            <option value="staf" {% if filter_role == 'staf' %}selected{% endif %}>Staf</option>
+                            <option value="keamanan" {% if filter_role == 'keamanan' %}selected{% endif %}>Keamanan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ url_for('pegawai_bp.pegawai') }}" class="btn btn-danger me-auto">Reset Filter</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-dark">Cari</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('edit_id');
+
+        if (editId) {
+            const editModalElement = document.querySelector('#editPegawaiModal');
+            if (editModalElement) {
+                const modalInstance = new bootstrap.Modal(editModalElement);
+                modalInstance.show();
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}
