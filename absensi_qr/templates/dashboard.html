@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Variabel Warna Modern */
+    :root {
+        --color-primary: #007bff; /* Biru */
+        --color-success: #28a745; /* Hijau */
+        --color-warning: #ffc107; /* Kuning */
+        --color-danger: #dc3545; /* Merah */
+        --color-info: #17a2b8; /* Cyan */
+        --color-secondary: #6c757d; /* Abu-abu */
+        --color-dark: #343a40; /* Hitam */
+
+        /* Warna Chart Khusus (Dibuat lebih gelap dan tegas) */
+        --chart-hadir: #198754; /* Hijau Tua */
+        --chart-terlambat: #ffc107; /* Kuning */
+        --chart-alfa: #dc3545; /* Merah */
+        --chart-sakit: #0dcaf0; /* Cyan/Biru Muda */
+        --chart-izin: #6c757d; /* Abu-abu */
+    }
+
+    /* Gaya Card Floating dan Shadow Modern */
+    .dashboard-card {
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        border: none;
+        border-radius: 1rem; /* Sudut lebih bulat */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Shadow lembut */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Gaya Card Header/Ikon untuk Baris 1 (Top Summary) */
+    .card-icon-container {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.75rem;
+        border-radius: 0 1rem 0 1rem;
+        color: white;
+        opacity: 0.9;
+    }
+
+    .card-icon-primary { background-image: linear-gradient(135deg, #007bff, #0056b3); }
+    .card-icon-success { background-image: linear-gradient(135deg, #28a745, #1e7e34); }
+    .card-icon-secondary { background-image: linear-gradient(135deg, #6c757d, #495057); }
+    .card-icon-dark { background-image: linear-gradient(135deg, #343a40, #1d2124); }
+
+    /* Gaya Header Statistik Rinci (Baris 2) */
+    .stat-header-primary { background-color: var(--color-primary); color: white; border-radius: 0.75rem 0.75rem 0 0; }
+    .stat-header-success { background-color: var(--color-success); color: white; border-radius: 0.75rem 0.75rem 0 0; }
+
+    /* Gaya Chart Container */
+    .chart-container {
+        position: relative;
+        height: 300px; /* Tinggi standar untuk grafik */
+        width: 100%;
+        margin: auto;
+        padding-top: 1rem; /* Ruang atas untuk grafik bar vertikal */
+    }
+
+    /* Penyesuaian Ukuran Font untuk Mobile */
+    @media (max-width: 768px) {
+        .display-mobile { font-size: 1.5rem !important; }
+        .h5-mobile { font-size: 1rem !important; }
+        .small-mobile { font-size: 0.65rem !important; }
+        .chart-container { height: 250px; } /* Lebih pendek di mobile */
+    }
+</style>
+
+<div class="container my-4">
+    <h2 class="mb-4 text-center fw-bold text-dark">Dashboard Absensi</h2>
+
+    <!-- BARIS 1: INFORMASI UTAMA & TOTAL GLOBAL (Compact dan Ikon Terpisah) -->
+    <div class="row g-3 mb-4">
+        <!-- Kartu Jam -->
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card shadow-lg bg-dark text-white h-100 p-3">
+                <div class="card-icon-container card-icon-dark">
+                     <i class="fas fa-clock fa-lg"></i>
+                </div>
+                <h5 class="card-title fw-bold display-mobile mb-0 mt-0" id="digital-clock"></h5>
+                <p class="mt-1 mb-0 small small-mobile" id="current-date-time"></p>
+            </div>
+        </div>
+
+        <!-- Kartu Total Siswa -->
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card shadow-lg h-100 text-dark p-3">
+                <div class="card-icon-container card-icon-primary">
+                    <i class="fas fa-user-graduate fa-lg"></i>
+                </div>
+                <h5 class="card-title fw-bold display-mobile mb-0 mt-0">{{ total_siswa }}</h5>
+                <p class="card-text text-uppercase fw-semibold mb-0 small small-mobile">Total Siswa</p>
+            </div>
+        </div>
+
+        <!-- Kartu Total Pegawai -->
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card shadow-lg h-100 text-dark p-3">
+                <div class="card-icon-container card-icon-success">
+                    <i class="fas fa-briefcase fa-lg"></i>
+                </div>
+                <h5 class="card-title fw-bold display-mobile mb-0 mt-0">{{ total_pegawai }}</h5>
+                <p class="card-text text-uppercase fw-semibold mb-0 small small-mobile">Total Pegawai</p>
+            </div>
+        </div>
+
+        <!-- Kartu Total Kelas -->
+        <div class="col-6 col-md-3">
+            <div class="card dashboard-card shadow-lg h-100 text-dark p-3">
+                <div class="card-icon-container card-icon-secondary">
+                    <i class="fas fa-chalkboard-teacher fa-lg"></i>
+                </div>
+                <h5 class="card-title fw-bold display-mobile mb-0 mt-0">{{ total_kelas }}</h5>
+                <p class="card-text text-uppercase fw-semibold mb-0 small small-mobile">Total Kelas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARIS 2: STATISTIK RINCI SISWA & PEGAWAI (Semua Bar Chart Vertikal) -->
+    <div class="row g-4">
+
+        <!-- KOLOM KIRI: STATISTIK SISWA (Vertical Bar Chart) -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg rounded-4 dashboard-card h-100 p-0">
+                <!-- Header Kolom -->
+                <div class="p-3 stat-header-primary">
+                    <h5 class="mb-0 fw-bold">Statistik Siswa Hari Ini</h5>
+                </div>
+
+                <div class="card-body pt-3 pb-2 px-4">
+                    <div class="chart-container">
+                        <canvas id="siswaBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KOLOM KANAN: STATISTIK PEGAWAI (Vertical Bar Chart) -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-lg rounded-4 dashboard-card h-100 p-0">
+                 <!-- Header Kolom -->
+                <div class="p-3 stat-header-success">
+                    <h5 class="mb-0 fw-bold">Statistik Pegawai Hari Ini</h5>
+                </div>
+
+                <div class="card-body pt-3 pb-2 px-4">
+                    <div class="chart-container">
+                         <!-- Menggunakan ID yang konsisten: pegawaiBarChart -->
+                         <canvas id="pegawaiBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Menggunakan Chart.js untuk visualisasi data -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- Menggunakan Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" xintegrity="sha512-1ycn6IcaQQ40B7M1aG5G2Fz2eA9vT6Jt5tY2jU40s2g6T5hI5S5M4kF4f5eE6r8P8W8K9p6U7jL2v1T5z0T9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- 1. Fungsi Waktu (Tidak diubah) ---
+        const digitalClock = document.getElementById('digital-clock');
+        const currentDateTime = document.getElementById('current-date-time');
+
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            digitalClock.textContent = `${hours}:${minutes}:${seconds}`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateTime.textContent = now.toLocaleDateString('id-ID', options);
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // --- 2. Data Absensi dari Jinja ---
+        // Data Siswa
+        const totalHadirSiswa = parseInt('{{ total_hadir_siswa }}');
+        const totalTerlambatSiswa = parseInt('{{ total_terlambat_siswa }}');
+        const totalAlfaSiswa = parseInt('{{ total_alfa_siswa }}');
+        const totalSakitSiswa = parseInt('{{ total_sakit_siswa }}');
+        const totalIzinSiswa = parseInt('{{ total_izin_siswa }}');
+        const dataSiswa = [totalHadirSiswa, totalTerlambatSiswa, totalAlfaSiswa, totalSakitSiswa, totalIzinSiswa];
+
+        // Data Pegawai
+        const totalHadirPegawai = parseInt('{{ total_hadir_pegawai }}');
+        const totalTerlambatPegawai = parseInt('{{ total_terlambat_pegawai }}');
+        // Anggap 'Alfa' Pegawai = 'Tidak Tercatat'
+        const totalAlfaPegawai = parseInt('{{ total_tidak_tercatat_pegawai }}');
+        const totalSakitPegawai = parseInt('{{ total_sakit_pegawai }}');
+        const totalIzinPegawai = parseInt('{{ total_izin_pegawai }}');
+        const dataPegawai = [totalHadirPegawai, totalTerlambatPegawai, totalAlfaPegawai, totalSakitPegawai, totalIzinPegawai];
+
+        const labels = ['Hadir', 'Terlambat', 'Alfa', 'Sakit', 'Izin'];
+        const colors = [
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-hadir').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-terlambat').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-alfa').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-sakit').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-izin').trim()
+        ];
+
+
+        // --- 3. Konfigurasi Chart.js (Fungsi Tunggal untuk Reusable) ---
+        /**
+         * Membuat Bar Chart Vertikal dengan style modern.
+         * @param {string} canvasId ID dari elemen canvas.
+         * @param {string} title Judul chart.
+         * @param {number[]} data Array data.
+         */
+        function createModernBarChart(canvasId, title, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const allZero = data.every(count => count === 0);
+
+            if (allZero) {
+                 // Jika semua data nol, tampilkan pesan informatif
+                 ctx.canvas.parentNode.innerHTML = `<p class="text-center text-muted py-5">Belum ada data ${title.toLowerCase()} yang tercatat hari ini.</p>`;
+                 return; // Keluar dari fungsi
+            }
+
+            // Mencari nilai maksimum untuk menentukan batas Y
+            const maxVal = Math.max(...data);
+            // Tambahkan padding 10% dari nilai maks
+            const suggestedMax = maxVal + Math.ceil(maxVal * 0.1);
+            // Memastikan suggestedMax minimal 5 jika maxVal < 5 agar skala terlihat bagus
+            const finalSuggestedMax = Math.max(suggestedMax, 5);
+
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 8, // Sudut membulat
+                        borderSkipped: false, // Memastikan sudut bawah juga bulat
+                        barPercentage: 0.7,
+                        categoryPercentage: 0.8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    // Tambahkan plugin untuk menampilkan label di atas bar (User-friendly)
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (context) => context[0].label,
+                                label: (context) => ` Jumlah: ${context.parsed.y} Orang`
+                            }
+                        },
+                        // Konfigurasi Data Labels (Membutuhkan chartjs-plugin-datalabels,
+                        // tapi kita bisa simulasikan dengan trik atau cukup menggunakan tooltip)
+                        // Untuk kasus ini, kita fokus pada styling, jadi tooltip sudah cukup user-friendly.
+                    },
+                    animation: {
+                        duration: 700, // Animasi saat load
+                        easing: 'easeInOutQuad'
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false // Menghilangkan garis vertikal
+                            },
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: finalSuggestedMax, // Batas Y yang dinamis
+                            grid: {
+                                borderDash: [2, 2], // Garis horizontal putus-putus halus
+                                color: 'rgba(0, 0, 0, 0.08)' // Warna garis sangat ringan
+                            },
+                            ticks: {
+                                stepSize: 1, // Pastikan langkahnya 1 untuk hitungan orang
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        // --- 4. Inisialisasi Chart ---
+
+        // Chart Siswa
+        createModernBarChart('siswaBarChart', 'Absensi Siswa', dataSiswa);
+
+        // Chart Pegawai
+        // Mengganti ID canvas dari 'pegawaiDoughnutChart' menjadi 'pegawaiBarChart'
+        createModernBarChart('pegawaiBarChart', 'Absensi Pegawai', dataPegawai);
+
+    });
+</script>
+{% endblock %}

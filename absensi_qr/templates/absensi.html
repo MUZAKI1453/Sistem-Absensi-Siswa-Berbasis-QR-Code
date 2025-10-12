@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <h3 class="mb-4">Laporan Absensi Harian Siswa</h3>
+
+    <!-- Tombol Cari & Export -->
+    <div class="d-flex justify-content-end mb-3 gap-2">
+        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#filterModal">
+            <i class="bi bi-search me-2"></i>Cari & Filter
+        </button>
+        <a href="{{ url_for('export_bp.export_laporan') }}" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel me-2"></i>Export Laporan
+        </a>
+    </div>
+
+    <!-- Tabel Data Absensi -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Absensi</h5>
+            {% if cari_nama or kelas_id or status %}
+            <a href="{{ url_for('absensi_bp.absensi') }}" class="btn btn-danger btn-sm">
+                <i class="bi bi-x-circle me-2"></i>Reset Filter
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle" id="absensiTable">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th>No</th>
+                            <th>NIS</th>
+                            <th>Nama Siswa</th>
+                            <th>Kelas</th>
+                            <th>Status Masuk</th>
+                            <th>Status Pulang</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in data_absensi %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ item.siswa.nis }}</td>
+                            <td>{{ item.siswa.nama }}</td>
+                            <td>{{ item.siswa.kelas_relasi.nama if item.siswa.kelas_relasi else 'Tidak Diketahui' }}</td>
+
+                            <!-- Status Masuk -->
+                            <td>
+                                {% if item.masuk %}
+                                    <span class="badge bg-{{ item.masuk.status | get_badge_color }}">{{ item.masuk.status }}</span>
+                                    {% if item.masuk.waktu %}
+                                        <br><small class="text-muted">{{ item.masuk.waktu.strftime('%H:%M') }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Kosong</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Status Pulang -->
+                            <td>
+                                {% if item.pulang %}
+                                    <span class="badge bg-{{ item.pulang.status | get_badge_color }}">{{ item.pulang.status }}</span>
+                                    {% if item.pulang.waktu %}
+                                        <br><small class="text-muted">{{ item.pulang.waktu.strftime('%H:%M') }}</small>
+                                    {% endif %}
+                                {% elif item.masuk and item.masuk.jenis_absen in ['masuk', 'lainnya'] %}
+                                    <span class="badge bg-warning text-dark">Belum Pulang</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Kosong</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Aksi -->
+                            <td>
+                                <form action="{{ url_for('absensi_bp.update_absensi', nis=item.siswa.nis) }}" method="POST">
+                                    <select name="status" class="form-select form-select-sm mb-1" required>
+                                        <option value="" disabled selected>Ubah Status</option>
+                                        <option value="Hadir">Hadir</option>
+                                        <option value="Sakit">Sakit</option>
+                                        <option value="Izin">Izin</option>
+                                        <option value="Alfa">Alfa</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100">Simpan</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">Tidak ada data siswa ditemukan.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cari & Filter -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <!-- 🔹 gunakan blueprint prefix -->
+            <form action="{{ url_for('absensi_bp.absensi') }}" method="get">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Cari & Filter Siswa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="cari_nama" class="form-label">Nama Siswa</label>
+                        <input type="text" class="form-control" id="cari_nama" name="cari_nama"
+                               value="{{ cari_nama or '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="filter_kelas" class="form-label">Filter Kelas</label>
+                        <select class="form-select" id="filter_kelas" name="kelas_id">
+                            <option value="">-- Semua Kelas --</option>
+                            {% for k in kelas_list %}
+                                <option value="{{ k.id }}" {% if kelas_id and kelas_id|string == k.id|string %}selected{% endif %}>
+                                    {{ k.nama }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="filter_status" class="form-label">Filter Status</label>
+                        <select class="form-select" id="filter_status" name="status">
+                            <option value="">-- Semua Status --</option>
+                            <option value="Hadir" {% if status == 'Hadir' %}selected{% endif %}>Hadir</option>
+                            <option value="Sakit" {% if status == 'Sakit' %}selected{% endif %}>Sakit</option>
+                            <option value="Izin" {% if status == 'Izin' %}selected{% endif %}>Izin</option>
+                            <option value="Alfa" {% if status == 'Alfa' %}selected{% endif %}>Alfa</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="{{ url_for('absensi_bp.absensi') }}" class="btn btn-danger me-auto">Reset Filter</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-dark">Cari</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-close alert -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bootstrapAlert = new bootstrap.Alert(alert);
+                bootstrapAlert.close();
+            }, 7000);
+        });
+    });
+</script>
+{% endblock %}
