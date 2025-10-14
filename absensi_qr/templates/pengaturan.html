@@ -4,7 +4,7 @@
 <!-- FALLBACK VARIABLES UNTUK MENGHINDARI UNDEFINED ERROR SAAT DIMUAT DARI ROUTE HANYA SISWA -->
 {% set setting_guru_staf = setting_guru_staf if setting_guru_staf is defined else None %}
 {% set settings_keamanan = settings_keamanan if settings_keamanan is defined else {} %}
-{% set setting_siswa_data = setting if setting is defined else None %}
+{% set setting_siswa_data = setting_siswa_data if setting_siswa_data is defined else None %}
 
 <!-- PERBAIKAN KRITIS: Memaksa variabel 'shifts' menjadi 4 elemen statis untuk memastikan rendering 4 tab dan form. -->
 {% set shifts = ['shift1', 'shift2', 'shift3', 'shift4'] %}
@@ -392,3 +392,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </div>
 {% endblock %}
+
