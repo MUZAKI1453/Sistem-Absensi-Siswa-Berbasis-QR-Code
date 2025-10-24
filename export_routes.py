@@ -4,50 +4,20 @@ import pandas as pd, io, calendar
 from utils import check_admin_session
 from models import db, Absensi, Siswa, Pegawai, AbsensiPegawai
 
-# Inisialisasi Blueprint dengan prefix URL
 export_bp = Blueprint("export_bp", __name__, url_prefix="/export")
 
-# ======================================================================
-#  HALAMAN UTAMA EXPORT
-# ======================================================================
 @export_bp.route("/", methods=["GET", "POST"])
 def export_laporan():
     auth_check = check_admin_session()
-    if auth_check:
-        return auth_check
-
+    if auth_check: return auth_check
     if request.method == "POST":
-        tipe_data = request.form.get("tipe_data")
-        jenis_laporan = request.form.get("jenis_laporan")
-        format_file = request.form.get("format_file")
-        tanggal = request.form.get("tanggal")
-        bulan = request.form.get("bulan")
-        tahun = request.form.get("tahun")
-        start_date = request.form.get("start_date")
-        end_date = request.form.get("end_date")
-
-        # Redirect ke fungsi ekspor sesuai pilihan
-        return redirect(url_for("export_bp.download_laporan",
-                                tipe_data=tipe_data,
-                                jenis_laporan=jenis_laporan,
-                                format_file=format_file,
-                                tanggal=tanggal,
-                                bulan=bulan,
-                                tahun=tahun,
-                                start_date=start_date,
-                                end_date=end_date))
-
+        return redirect(url_for("export_bp.download_laporan", **request.form))
     return render_template("export_laporan.html", current_year=datetime.now().year)
 
-
-# ======================================================================
-#  FUNGSI EKSPOR DATA (HARlAN / BULANAN / MINGGUAN)
-# ======================================================================
 @export_bp.route("/download_laporan")
 def download_laporan():
     auth_check = check_admin_session()
-    if auth_check:
-        return auth_check
+    if auth_check: return auth_check
 
     tipe_data = request.args.get("tipe_data")
     jenis_laporan = request.args.get("jenis_laporan")
@@ -58,113 +28,97 @@ def download_laporan():
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
-    # Tentukan model dan relasi
     if tipe_data == "siswa":
-        query = db.session.query(Absensi, Siswa).join(Siswa, Absensi.nis == Siswa.nis)
-        ModelAbsensi = Absensi
+        ModelAbsensi, ModelOrang = Absensi, Siswa
+        join_condition = (Absensi.nis == Siswa.nis)
+        id_field_orang, id_field_absensi = "nis", "nis"
     else:
-        query = db.session.query(AbsensiPegawai, Pegawai).join(Pegawai, AbsensiPegawai.no_id == Pegawai.no_id)
-        ModelAbsensi = AbsensiPegawai
+        ModelAbsensi, ModelOrang = AbsensiPegawai, Pegawai
+        join_condition = (AbsensiPegawai.no_id == Pegawai.no_id)
+        id_field_orang, id_field_absensi = "no_id", "no_id"
 
-    # Filter laporan
+    status_map = {"Hadir": "H", "Terlambat": "H", "Sakit": "S", "Izin": "I", "Alfa": "A"}
+    semua_orang = ModelOrang.query.order_by(ModelOrang.nama).all()
+    
+    query_absensi = db.session.query(ModelAbsensi)
     if jenis_laporan == "harian" and tanggal:
-        query = query.filter(ModelAbsensi.tanggal == tanggal)
+        query_absensi = query_absensi.filter(ModelAbsensi.tanggal == tanggal)
     elif jenis_laporan == "bulanan" and bulan and tahun:
-        query = query.filter(db.extract("month", ModelAbsensi.tanggal) == int(bulan))
-        query = query.filter(db.extract("year", ModelAbsensi.tanggal) == int(tahun))
+        query_absensi = query_absensi.filter(db.extract("month", ModelAbsensi.tanggal) == int(bulan), db.extract("year", ModelAbsensi.tanggal) == int(tahun))
     elif jenis_laporan == "mingguan" and start_date and end_date:
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
-        query = query.filter(ModelAbsensi.tanggal.between(start_dt, end_dt))
+        start_dt, end_dt = datetime.strptime(start_date, "%Y-%m-%d").date(), datetime.strptime(end_date, "%Y-%m-%d").date()
+        query_absensi = query_absensi.filter(ModelAbsensi.tanggal.between(start_dt, end_dt))
 
-    hasil = query.all()
-
-    if not hasil:
-        flash("Tidak ada data ditemukan untuk periode tersebut.", "warning")
-        return redirect(url_for("export_bp.export_laporan"))
-
-    # Susun data
+    hasil_absensi = query_absensi.all()
+    absensi_dict = {
+        (getattr(absen, id_field_absensi), absen.tanggal): status_map.get(absen.status, "A")
+        for absen in hasil_absensi if absen.jenis_absen in ['masuk', 'lainnya']
+    }
+    
     data = []
-    for absensi, orang in hasil:
-        if absensi.status == "Terlambat":
-            status_laporan = "Hadir (Terlambat)"
-        else:
-            status_laporan = absensi.status
+    df = pd.DataFrame()
 
-        data.append({
-            "Nama": orang.nama,
-            "ID": getattr(orang, "nis", getattr(orang, "no_id", None)),
-            "Tanggal": absensi.tanggal.strftime("%Y-%m-%d"),
-            "Hari": absensi.tanggal.strftime("%A"),
-            "Waktu": absensi.waktu.strftime('%H:%M:%S'),
-            "Status": status_laporan
-        })
-
-    df = pd.DataFrame(data)
-
-    # ==========================================================
-    #  LAPORAN HARIAN
-    # ==========================================================
     if jenis_laporan == "harian":
+        absensi_harian = db.session.query(ModelAbsensi, ModelOrang).join(ModelOrang, join_condition).filter(ModelAbsensi.tanggal == tanggal).all()
+        for absensi, orang in absensi_harian:
+            data.append({
+                "ID": getattr(orang, id_field_orang), "Nama": orang.nama,
+                "Waktu": absensi.waktu.strftime('%H:%M:%S') if absensi.waktu else '-',
+                "Status": absensi.status, "Jenis Absen": absensi.jenis_absen
+            })
+        df = pd.DataFrame(data)
         sheet_name = f"Laporan {tanggal}"
         filename = f"laporan_{tipe_data}_harian_{tanggal}"
 
-    # ==========================================================
-    #  LAPORAN BULANAN (format tabel per hari)
-    # ==========================================================
     elif jenis_laporan == "bulanan":
         month_name = calendar.month_name[int(bulan)]
         sheet_name = f"Laporan {month_name} {tahun}"
         filename = f"laporan_{tipe_data}_bulanan_{bulan}_{tahun}"
-
-        df["Hari"] = pd.to_datetime(df["Tanggal"]).dt.day
-        df_pivot = df.pivot_table(index=["Nama", "ID"], columns="Hari", values="Status", aggfunc=lambda x: ", ".join(x))
-        df_pivot = df_pivot.reset_index()
-
-        # pastikan kolom sesuai jumlah hari di bulan tsb
         days_in_month = calendar.monthrange(int(tahun), int(bulan))[1]
-        for d in range(1, days_in_month + 1):
-            if d not in df_pivot.columns:
-                df_pivot[d] = "-"
+        for orang in semua_orang:
+            row_data = {"ID": getattr(orang, id_field_orang), "Nama": orang.nama}
+            hadir = sum(1 for day in range(1, days_in_month + 1) if absensi_dict.get((getattr(orang, id_field_orang), datetime(int(tahun), int(bulan), day).date()), "A") == "H")
+            for day in range(1, days_in_month + 1):
+                tgl = datetime(int(tahun), int(bulan), day).date()
+                row_data[day] = absensi_dict.get((getattr(orang, id_field_orang), tgl), "A")
+            row_data["Total Hadir"] = hadir
+            data.append(row_data)
+        df = pd.DataFrame(data)
 
-        df_pivot = df_pivot[["Nama", "ID"] + list(range(1, days_in_month + 1))]
-        df_pivot["Total Hadir"] = df_pivot.apply(lambda r: sum("Hadir" in str(v) for v in r.values), axis=1)
-        df = df_pivot
-
-    # ==========================================================
-    #  LAPORAN MINGGUAN (format mirip bulanan, tapi range)
-    # ==========================================================
     elif jenis_laporan == "mingguan":
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+        start_dt, end_dt = datetime.strptime(start_date, "%Y-%m-%d").date(), datetime.strptime(end_date, "%Y-%m-%d").date()
         sheet_name = f"Laporan {start_dt.strftime('%d %b')} - {end_dt.strftime('%d %b %Y')}"
         filename = f"laporan_{tipe_data}_mingguan_{start_dt}_{end_dt}"
-
-        df["Hari"] = pd.to_datetime(df["Tanggal"]).dt.day
-        df_pivot = df.pivot_table(index=["Nama", "ID"], columns="Tanggal", values="Status", aggfunc=lambda x: ", ".join(x))
-        df_pivot = df_pivot.reset_index()
-
         tanggal_range = pd.date_range(start_dt, end_dt)
-        for t in tanggal_range:
-            col = t.strftime("%Y-%m-%d")
-            if col not in df_pivot.columns:
-                df_pivot[col] = "-"
+        kolom_tanggal = [t.day for t in tanggal_range]
+        for orang in semua_orang:
+            row_data = {"ID": getattr(orang, id_field_orang), "Nama": orang.nama}
+            hadir = sum(1 for tgl in tanggal_range if absensi_dict.get((getattr(orang, id_field_orang), tgl.date()), "A") == "H")
+            for tgl in tanggal_range:
+                row_data[tgl.day] = absensi_dict.get((getattr(orang, id_field_orang), tgl.date()), "A")
+            row_data["Total Hadir"] = hadir
+            data.append(row_data)
+        df = pd.DataFrame(data)
+        if not df.empty:
+            df = df[["ID", "Nama"] + sorted(kolom_tanggal) + ["Total Hadir"]]
 
-        df_pivot = df_pivot[["Nama", "ID"] + [t.strftime("%Y-%m-%d") for t in tanggal_range]]
-        df_pivot["Total Hadir"] = df_pivot.apply(lambda r: sum("Hadir" in str(v) for v in r.values), axis=1)
-        df = df_pivot
+    if df.empty:
+        flash("Tidak ada data ditemukan untuk periode tersebut.", "warning")
+        return redirect(url_for("export_bp.export_laporan"))
 
     # ==========================================================
-    #  EXPORT FILE
+    #  REVISI: LOGIKA UNTUK MEMILIH FORMAT FILE (CSV atau EXCEL)
     # ==========================================================
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name=sheet_name)
+    if format_file == 'csv':
+        df.to_csv(output, index=False)
+        mimetype = 'text/csv'
+        filename += '.csv'
+    else: # Default ke Excel
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name=sheet_name)
+        mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        filename += '.xlsx'
+    
     output.seek(0)
-
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name=f"{filename}.xlsx",
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+    return send_file(output, as_attachment=True, download_name=filename, mimetype=mimetype)

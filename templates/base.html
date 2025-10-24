@@ -187,6 +187,7 @@
             padding: 20px;
             min-height: 100vh;
             transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box; 
         }
 
         .sidebar.collapsed + .content {
@@ -215,11 +216,19 @@
                 box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
             }
             .sidebar.active { transform: translateX(0); }
-            .content { margin-left: 0; }
+            
+            .content { 
+                margin-left: 0;
+                min-height: calc(100vh - 60px); 
+            }
+
             .navbar-toggle { display: block; }
             #toggleSidebar {
                 cursor: default;
                 pointer-events: none;
+            }
+            body {
+                padding-top: 60px;
             }
         }
 
@@ -227,13 +236,14 @@
             .sidebar.collapsed .sidebar-header { justify-content: center; }
             .sidebar.collapsed .sidebar-brand i { margin: 0; }
         }
+        
         .page-title {
-            text-align: left; /* Default di desktop */
+            text-align: left;
         }
+
         @media (max-width: 992px) {
             .page-title {
-                text-align: center; /* Pindah ke tengah di mobile */
-                margin-top: 50px; /* Beri sedikit ruang dari tombol hamburger */
+                text-align: center;
             }
         }
     </style>
@@ -255,6 +265,12 @@
                 <a class="nav-link {% if request.path == url_for('dashboard_bp.dashboard') %}active{% endif %}" href="{{ url_for('dashboard_bp.dashboard') }}">
                     <i class="bi bi-speedometer2"></i><span>Dashboard</span>
                 </a>
+                <a class="nav-link {% if 'absensi' in request.path and 'pegawai' not in request.path %}active{% endif %}" href="{{ url_for('absensi_bp.absensi') }}">
+                    <i class="bi bi-clipboard-check"></i><span>Absensi Siswa</span>
+                </a>
+                <a class="nav-link {% if 'absensi_pegawai' in request.path %}active{% endif %}" href="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}">
+                    <i class="bi bi-clipboard-check-fill"></i><span>Absensi Pegawai</span>
+                </a>
                 <a class="nav-link {% if 'siswa' in request.path and 'absensi' not in request.path %}active{% endif %}" href="{{ url_for('siswa_bp.siswa') }}">
                     <i class="bi bi-person-fill"></i><span>Data Siswa</span>
                 </a>
@@ -264,16 +280,7 @@
                 <a class="nav-link {% if 'kelas' in request.path %}active{% endif %}" href="{{ url_for('kelola_kelas_bp.kelola_kelas') }}">
                     <i class="bi bi-book"></i><span>Kelola Kelas</span>
                 </a>
-                <a class="nav-link {% if 'scan' in request.path %}active{% endif %}" href="{{ url_for('scan_bp.scan') }}">
-                    <i class="bi bi-qr-code-scan"></i><span>Scan QR</span>
-                </a>
-                <a class="nav-link {% if 'absensi' in request.path and 'pegawai' not in request.path %}active{% endif %}" href="{{ url_for('absensi_bp.absensi') }}">
-                    <i class="bi bi-clipboard-check"></i><span>Absensi Siswa</span>
-                </a>
-                <a class="nav-link {% if 'absensi_pegawai' in request.path %}active{% endif %}" href="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}">
-                    <i class="bi bi-clipboard-check-fill"></i><span>Absensi Pegawai</span>
-                </a>
-                <a class="nav-link {% if 'jadwal-keamanan' in request.path %}active{% endif %}" href="{{ url_for('jadwal_keamanan_bp.jadwal_keamanan') }}">
+                <a class="nav-link {% if 'jadwal_keamanan' in request.path %}active{% endif %}" href="{{ url_for('jadwal_keamanan_bp.jadwal_keamanan') }}">
                     <i class="bi bi-calendar-range"></i><span>Jadwal Keamanan</span>
                 </a>
                 <a class="nav-link {% if 'export' in request.path %}active{% endif %}" href="{{ url_for('export_bp.export_laporan') }}">
@@ -310,10 +317,47 @@
         {% block content %}{% endblock %}
     </div>
 
+    {% if 'admin' in session and request.path != url_for('scan_bp.scan') and request.path != url_for('login') %}
+    <style>
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1050;
+        }
+        .fab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            background-color: #0d6efd; 
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+        .fab:hover {
+            background-color: #0b5ed7; 
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+        .fab i {
+            font-size: 36px;
+        }
+    </style>
+    <div class="fab-container">
+        <a href="{{ url_for('scan_bp.scan') }}" class="fab" title="Scan QR Code">
+            <i class="bi bi-qr-code-scan"></i>
+        </a>
+    </div>
+    {% endif %}
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Logika untuk menutup alert otomatis
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
                 setTimeout(() => {
@@ -326,7 +370,6 @@
             const toggleSidebar = document.getElementById('toggleSidebar');
             const navbarToggle = document.getElementById('navbarToggle');
 
-            // Logika untuk mengatur tinggi sidebar di mobile
             const setSidebarHeight = () => {
                 if (sidebar) {
                     sidebar.style.height = `${window.innerHeight}px`;
@@ -336,33 +379,23 @@
             setSidebarHeight();
             window.addEventListener('resize', setSidebarHeight);
 
-
-            // =================================================================
-            // PENAMBAHAN KODE: Logika untuk mengingat status sidebar
-            // =================================================================
-            // Saat halaman dimuat, cek localStorage untuk status 'sidebarCollapsed'
             if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth >= 992) {
                 sidebar.classList.add('collapsed');
             }
-            // =================================================================
 
-            // 1. Toggle sidebar (Desktop/Collapsable)
             toggleSidebar.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (window.innerWidth >= 992) {
                     sidebar.classList.toggle('collapsed');
-                    // PENAMBAHAN KODE: Simpan status baru ke localStorage
                     localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
                 }
             });
 
-            // 2. Toggle sidebar (Mobile/Show-Hide)
             navbarToggle.addEventListener('click', function() {
                 sidebar.classList.toggle('active');
                 document.documentElement.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
             });
 
-            // 3. Menutup sidebar mobile ketika mengklik tautan
             document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                 link.addEventListener('click', () => {
                     if (window.innerWidth < 992 && sidebar.classList.contains('active')) {
@@ -372,7 +405,6 @@
                 });
             });
 
-            // 4. Reset state saat resize dari mobile ke desktop
             window.addEventListener('resize', function() {
                 if (window.innerWidth >= 992) {
                     sidebar.classList.remove('active');
