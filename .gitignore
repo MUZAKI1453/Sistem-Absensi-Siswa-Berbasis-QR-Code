@@ -1,0 +1,18 @@
+# Virtual Environment
+.venv/
+
+# Database
+instance/absensi.db
+static/qr_codes
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Editor/IDE folders 
+.idea/
+.vscode/
+
+# Environment Variables File
+.env
+
