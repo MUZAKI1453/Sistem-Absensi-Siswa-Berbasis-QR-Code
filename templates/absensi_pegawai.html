@@ -16,7 +16,7 @@
         <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#filterModal">
             <i class="bi bi-search me-2"></i>Cari & Filter
         </button>
-        <a href="{{ url_for('export_bp.export_laporan') }}" class="btn btn-success">
+        <a href="{{ url_for('export_bp.export_laporan', tipe='pegawai') }}" class="btn btn-success">
             <i class="bi bi-file-earmark-excel"></i> Export Laporan
         </a>
     </div>

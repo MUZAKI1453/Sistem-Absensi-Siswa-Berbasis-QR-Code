@@ -13,8 +13,8 @@
         <div class="mb-3">
             <label class="form-label fw-bold">Pilih Jenis Data:</label>
             <select class="form-select" name="tipe_data" required>
-                <option value="siswa">Siswa</option>
-                <option value="pegawai">Pegawai</option>
+                <option value="siswa" {% if tipe_filter == 'siswa' %}selected{% endif %}>Siswa</option>
+                <option value="pegawai" {% if tipe_filter == 'pegawai' %}selected{% endif %}>Pegawai</option>
             </select>
         </div>
 

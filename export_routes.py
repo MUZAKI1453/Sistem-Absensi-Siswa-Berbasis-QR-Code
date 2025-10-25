@@ -12,7 +12,10 @@ def export_laporan():
     if auth_check: return auth_check
     if request.method == "POST":
         return redirect(url_for("export_bp.download_laporan", **request.form))
-    return render_template("export_laporan.html", current_year=datetime.now().year)
+    
+    tipe_filter = request.args.get('tipe') # Mengambil parameter dari URL
+    
+    return render_template("export_laporan.html", current_year=datetime.now().year, tipe_filter=tipe_filter)
 
 @export_bp.route("/download_laporan")
 def download_laporan():
