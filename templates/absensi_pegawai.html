@@ -4,9 +4,9 @@
 {% block content %}
 
 <div class="container mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold mb-4 page-title"><i class="bi bi-clipboard-check-fill me-2"></i>Laporan Absensi Pegawai</h3>
-        <form method="GET" action="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}" class="d-flex align-items-center gap-2">
+    <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center mb-4">
+        <h3 class="fw-bold page-title mb-3 mb-md-0"><i class="bi bi-clipboard-check-fill me-2"></i>Laporan Absensi Pegawai</h3>
+        <form method="GET" action="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}" class="d-flex align-items-center gap-2 align-self-end align-self-md-auto">
             <input type="date" name="tanggal" class="form-control" value="{{ tanggal_dipilih.strftime('%Y-%m-%d') }}">
             <button type="submit" class="btn btn-dark">Tampilkan</button>
         </form>
@@ -34,7 +34,7 @@
     {% else %}
     <div class="card shadow-sm">
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Absensi Pegawai untuk {{ tanggal_dipilih.strftime('%d %B %Y') }}</h5>
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Absensi Pegawai</h5>
             {% if cari_nama or role_filter or status %}
             <a href="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}" class="btn btn-danger btn-sm">
                 <i class="bi bi-x-circle me-2"></i>Reset Filter
