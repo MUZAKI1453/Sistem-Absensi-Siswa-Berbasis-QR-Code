@@ -183,26 +183,26 @@
         // Data Siswa
         const totalHadirSiswa = parseInt('{{ total_hadir_siswa }}');
         const totalTerlambatSiswa = parseInt('{{ total_terlambat_siswa }}');
-        const totalAlfaSiswa = parseInt('{{ total_alfa_siswa }}');
         const totalSakitSiswa = parseInt('{{ total_sakit_siswa }}');
         const totalIzinSiswa = parseInt('{{ total_izin_siswa }}');
-        const dataSiswa = [totalHadirSiswa, totalTerlambatSiswa, totalAlfaSiswa, totalSakitSiswa, totalIzinSiswa];
+        const totalAlfaSiswa = parseInt('{{ total_alfa_siswa }}');
+        const dataSiswa = [totalHadirSiswa, totalTerlambatSiswa, totalSakitSiswa, totalIzinSiswa, totalAlfaSiswa];
 
         // Data Pegawai
         const totalHadirPegawai = parseInt('{{ total_hadir_pegawai }}');
         const totalTerlambatPegawai = parseInt('{{ total_terlambat_pegawai }}');
-        const totalAlfaPegawai = parseInt('{{ total_tidak_tercatat_pegawai }}');
         const totalSakitPegawai = parseInt('{{ total_sakit_pegawai }}');
         const totalIzinPegawai = parseInt('{{ total_izin_pegawai }}');
-        const dataPegawai = [totalHadirPegawai, totalTerlambatPegawai, totalAlfaPegawai, totalSakitPegawai, totalIzinPegawai];
+        const totalAlfaPegawai = parseInt('{{ total_tidak_tercatat_pegawai }}');
+        const dataPegawai = [totalHadirPegawai, totalTerlambatPegawai, totalSakitPegawai, totalIzinPegawai, totalAlfaPegawai];
 
-        const labels = ['Hadir', 'Terlambat', 'Alfa', 'Sakit', 'Izin'];
+        const labels = ['Hadir', 'Terlambat', 'Sakit', 'Izin', 'Alfa'];
         const colors = [
             getComputedStyle(document.documentElement).getPropertyValue('--chart-hadir').trim(),
             getComputedStyle(document.documentElement).getPropertyValue('--chart-terlambat').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--chart-alfa').trim(),
             getComputedStyle(document.documentElement).getPropertyValue('--chart-sakit').trim(),
-            getComputedStyle(document.documentElement).getPropertyValue('--chart-izin').trim()
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-izin').trim(),
+            getComputedStyle(document.documentElement).getPropertyValue('--chart-alfa').trim(),
         ];
 
 
