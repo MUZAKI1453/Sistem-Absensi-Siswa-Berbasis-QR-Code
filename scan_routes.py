@@ -21,7 +21,7 @@ def scan():
 
 
 # =======================================================================
-#  ROUTE: PROSES SUBMIT QR (DENGAN INTEGRASI HARI LIBUR + TOLERANSI)
+#  ROUTE: PROSES SUBMIT QR (DENGAN LOGIKA LIBUR PER-ROLE)
 # =======================================================================
 @scan_bp.route("/submit_scan", methods=["POST"])
 def submit_scan():
@@ -41,26 +41,7 @@ def submit_scan():
     nama_hari_id = daftar_hari_id.get(nama_hari_en, nama_hari_en)
 
     # =======================================================================
-    #  CEK HARI LIBUR (rutin dan spesial)
-    # =======================================================================
-    setting_waktu = SettingWaktu.query.first()
-    if setting_waktu and setting_waktu.hari_libur_rutin:
-        libur_rutin = setting_waktu.hari_libur_rutin.split(',')
-        if nama_hari_id in libur_rutin:
-            return jsonify({
-                'status': 'warning',
-                'message': f"Hari {nama_hari_id} adalah hari libur rutin. Absensi tidak dicatat."
-            })
-
-    libur_spesial = HariLibur.query.filter_by(tanggal=hari_ini).first()
-    if libur_spesial:
-        return jsonify({
-            'status': 'warning',
-            'message': f"Hari ini libur: {libur_spesial.keterangan}. Absensi tidak dicatat."
-        })
-
-    # =======================================================================
-    #  PARSE QR CODE
+    #  PERUBAHAN 1: PARSE QR CODE DILAKUKAN DI AWAL
     # =======================================================================
     qr_data = qr_data.strip().lower()
     if len(qr_data) < 2:
@@ -80,6 +61,23 @@ def submit_scan():
 
     # ====================== SISWA ======================
     if prefix == 's':
+        # --- CEK HARI LIBUR (KHUSUS SISWA) ---
+        setting_waktu = SettingWaktu.query.first()
+        if setting_waktu and setting_waktu.hari_libur_rutin:
+            libur_rutin = setting_waktu.hari_libur_rutin.split(',')
+            if nama_hari_id in libur_rutin:
+                return jsonify({
+                    'status': 'warning',
+                    'message': f"Hari {nama_hari_id} adalah hari libur rutin. Absensi tidak dicatat."
+                })
+
+        libur_spesial = HariLibur.query.filter_by(tanggal=hari_ini).first()
+        if libur_spesial:
+            return jsonify({
+                'status': 'warning',
+                'message': f"Hari ini libur: {libur_spesial.keterangan}. Absensi tidak dicatat."
+            })
+
         entity = Siswa.query.filter_by(nis=identifier).first()
         if not entity:
             return jsonify({'status': 'danger', 'message': f'Siswa dengan NIS {identifier} tidak ditemukan.'})
@@ -100,15 +98,34 @@ def submit_scan():
         role = entity.role
 
         if role in ('guru', 'staf'):
+            # --- CEK HARI LIBUR (KHUSUS GURU & STAF) ---
+            setting_waktu = SettingWaktu.query.first() # Menggunakan setting waktu siswa untuk hari libur
+            if setting_waktu and setting_waktu.hari_libur_rutin:
+                libur_rutin = setting_waktu.hari_libur_rutin.split(',')
+                if nama_hari_id in libur_rutin:
+                    return jsonify({
+                        'status': 'warning',
+                        'message': f"Hari {nama_hari_id} adalah hari libur rutin. Absensi tidak dicatat."
+                    })
+
+            libur_spesial = HariLibur.query.filter_by(tanggal=hari_ini).first()
+            if libur_spesial:
+                return jsonify({
+                    'status': 'warning',
+                    'message': f"Hari ini libur: {libur_spesial.keterangan}. Absensi tidak dicatat."
+                })
+            
             setting = SettingWaktuGuruStaf.query.first()
+        
         elif role == 'keamanan':
-            # Ambil jadwal shift keamanan
+            # --- UNTUK KEAMANAN, TIDAK ADA CEK HARI LIBUR GLOBAL ---
+            # Logika libur mereka hanya berdasarkan jadwal shift 'Off'
             jadwal_hari_ini = JadwalKeamanan.query.filter_by(pegawai_id=entity.id, tanggal=hari_ini).first()
             if jadwal_hari_ini and jadwal_hari_ini.shift not in ['Off', '']:
                 shift = jadwal_hari_ini.shift
                 setting = SettingWaktuKeamanan.query.filter_by(nama_shift=shift).first()
             else:
-                return jsonify({'status': 'danger', 'message': 'Jadwal keamanan untuk hari ini tidak ditemukan atau sedang libur.'})
+                return jsonify({'status': 'danger', 'message': 'Jadwal keamanan untuk hari ini tidak ditemukan atau Anda sedang libur (shift Off).'})
         else:
             return jsonify({'status': 'danger', 'message': f'Role {role} tidak dikenali.'})
 
@@ -119,7 +136,7 @@ def submit_scan():
         return jsonify({'status': 'danger', 'message': 'Pengaturan waktu absensi belum diatur oleh admin.'})
 
     # =======================================================================
-    #  CEK WAKTU ABSEN + TOLERANSI
+    #  SISA LOGIKA (CEK WAKTU, SIMPAN ABSEN, KIRIM WA) TETAP SAMA
     # =======================================================================
     jam_masuk_mulai_dt = datetime.combine(hari_ini, setting.jam_masuk_mulai)
     jam_masuk_selesai_dt = datetime.combine(hari_ini, setting.jam_masuk_selesai)
@@ -130,7 +147,6 @@ def submit_scan():
     jam_pulang_mulai_dt = datetime.combine(hari_ini, setting.jam_pulang_mulai)
     jam_pulang_selesai_dt = datetime.combine(hari_ini, setting.jam_pulang_selesai)
 
-    # Tambahkan toleransi 1 menit untuk hadir dan terlambat
     toleransi = timedelta(minutes=1)
     jam_masuk_selesai_plus = jam_masuk_selesai_dt + toleransi
     jam_terlambat_selesai_plus = (
@@ -149,17 +165,11 @@ def submit_scan():
     else:
         return jsonify({'status': 'danger', 'message': 'Bukan waktu absensi yang valid.'})
 
-    # =======================================================================
-    #  CEK SUDAH ABSEN BELUM
-    # =======================================================================
     filter_conditions = {field: identifier, "tanggal": hari_ini, "jenis_absen": jenis_absen}
     sudah_absen = model.query.filter_by(**filter_conditions).first()
     if sudah_absen:
         return jsonify({'status': 'warning', 'message': f"{entity.nama} sudah absen {jenis_absen} hari ini."})
 
-    # =======================================================================
-    #  SIMPAN DATA ABSENSI
-    # =======================================================================
     absensi_data = {
         field: identifier,
         "status": status_absen_db,
@@ -176,9 +186,6 @@ def submit_scan():
         print("Database Error:", e)
         return jsonify({'status': 'danger', 'message': 'Gagal menyimpan data absensi.'})
 
-    # =======================================================================
-    #  KIRIM WHATSAPP (HANYA SISWA)
-    # =======================================================================
     if send_wa and entity.no_hp_ortu:
         nomor = format_nomor_hp(entity.no_hp_ortu)
         pesan = (
@@ -188,7 +195,7 @@ def submit_scan():
         )
 
         try:
-            token = "m7sWNBLHrGi2AHZNj2x3"  # Ganti dengan token Fonnte kamu sendiri
+            token = "m7sWNBLHrGi2AHZNj2x3"
             response = requests.post(
                 "https://api.fonnte.com/send",
                 headers={"Authorization": token},
