@@ -265,17 +265,17 @@
                 <a class="nav-link {% if request.path == url_for('dashboard_bp.dashboard') %}active{% endif %}" href="{{ url_for('dashboard_bp.dashboard') }}">
                     <i class="bi bi-speedometer2"></i><span>Dashboard</span>
                 </a>
-                <a class="nav-link {% if 'absensi' in request.path and 'pegawai' not in request.path %}active{% endif %}" href="{{ url_for('absensi_bp.absensi') }}">
-                    <i class="bi bi-clipboard-check"></i><span>Absensi Siswa</span>
-                </a>
-                <a class="nav-link {% if 'absensi_pegawai' in request.path %}active{% endif %}" href="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}">
-                    <i class="bi bi-clipboard-check-fill"></i><span>Absensi Pegawai</span>
-                </a>
                 <a class="nav-link {% if 'siswa' in request.path and 'absensi' not in request.path %}active{% endif %}" href="{{ url_for('siswa_bp.siswa') }}">
                     <i class="bi bi-person-fill"></i><span>Data Siswa</span>
                 </a>
                 <a class="nav-link {% if 'pegawai' in request.path and 'absensi' not in request.path %}active{% endif %}" href="{{ url_for('pegawai_bp.pegawai') }}">
                     <i class="bi bi-person-workspace"></i><span>Data Pegawai</span>
+                </a>
+                <a class="nav-link {% if 'absensi' in request.path and 'pegawai' not in request.path %}active{% endif %}" href="{{ url_for('absensi_bp.absensi') }}">
+                    <i class="bi bi-clipboard-check"></i><span>Absensi Siswa</span>
+                </a>
+                <a class="nav-link {% if 'absensi_pegawai' in request.path %}active{% endif %}" href="{{ url_for('absensi_pegawai_bp.absensi_pegawai') }}">
+                    <i class="bi bi-clipboard-check-fill"></i><span>Absensi Pegawai</span>
                 </a>
                 <a class="nav-link {% if 'kelas' in request.path %}active{% endif %}" href="{{ url_for('kelola_kelas_bp.kelola_kelas') }}">
                     <i class="bi bi-book"></i><span>Kelola Kelas</span>
