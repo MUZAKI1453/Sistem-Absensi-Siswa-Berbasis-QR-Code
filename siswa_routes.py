@@ -1,6 +1,7 @@
 import csv
 import os
-import io
+import io, zipfile
+from datetime import datetime
 
 from flask import Blueprint, flash, request, render_template, url_for, redirect, send_file, session, current_app
 from models import Siswa, Kelas, db
@@ -168,6 +169,58 @@ def view_qr(nis):
 
     return send_file(img_io, mimetype='image/png')
 
+# =======================================================================
+# ROUTE: IMPORT DATA SISWA
+# =======================================================================
+# =======================================================================
+# ROUTE: DOWNLOAD SEMUA QR CODE SISWA (DENGAN SUBFOLDER PER KELAS)
+# =======================================================================
+@siswa_bp.route("/download_all_qr")
+def download_all_qr():
+    auth_check = check_admin_session()
+    if auth_check:
+        return auth_check
+
+    # Folder dasar untuk simpan sementara ZIP
+    base_folder = current_app.config["QR_FOLDER_SISWA"]
+    os.makedirs(base_folder, exist_ok=True)
+
+    # Buat folder sementara untuk isi ZIP
+    temp_folder = os.path.join(base_folder, "all_qr_temp")
+    os.makedirs(temp_folder, exist_ok=True)
+
+    # Ambil semua data siswa + kelas
+    siswa_data = Siswa.query.join(Kelas).order_by(Kelas.nama.asc(), Siswa.nama.asc()).all()
+
+    for siswa in siswa_data:
+        kelas_folder = os.path.join(temp_folder, siswa.kelas_relasi.nama)
+        os.makedirs(kelas_folder, exist_ok=True)
+
+        # Generate QR (pastikan selalu terbaru)
+        qr_filename = f"{siswa.nis}_{siswa.nama}.png"
+        qr_path = os.path.join(kelas_folder, qr_filename)
+
+        qr_image = create_qr_siswa(siswa.nis, siswa.nama)
+        qr_image.save(qr_path)
+
+    # Nama file ZIP hasil
+    zip_filename = f"qr_siswa_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    zip_path = os.path.join(base_folder, zip_filename)
+
+    # Buat file ZIP
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(temp_folder):
+            for file in files:
+                file_path = os.path.join(root, file)
+                # Struktur di dalam ZIP tetap ada folder per kelas
+                arcname = os.path.relpath(file_path, temp_folder)
+                zipf.write(file_path, arcname)
+
+    # Bersihkan folder sementara
+    import shutil
+    shutil.rmtree(temp_folder, ignore_errors=True)
+
+    return send_file(zip_path, mimetype="application/zip", as_attachment=True, download_name=zip_filename)
 
 # =======================================================================
 # ROUTE: IMPORT DATA SISWA

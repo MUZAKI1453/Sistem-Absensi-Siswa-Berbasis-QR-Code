@@ -12,6 +12,9 @@
         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal">
             <i class="bi bi-file-earmark-arrow-up me-2"></i>Import dari CSV
         </button>
+        <a href="{{ url_for('pegawai_bp.download_all_qr_pegawai') }}" class="btn btn-secondary">
+            <i class="bi bi-folder-symlink me-2"></i>Download Semua QR
+        </a>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahPegawaiModal">
             <i class="bi bi-plus-circle me-2"></i>Tambah Pegawai
         </button>

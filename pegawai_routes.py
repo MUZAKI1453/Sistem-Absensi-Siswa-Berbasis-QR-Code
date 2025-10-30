@@ -1,6 +1,8 @@
 import csv
-import io
+import io, zipfile
 import os
+from datetime import datetime
+
 from flask import Blueprint, request, flash, render_template, redirect, url_for, send_file, current_app
 from models import Pegawai, db
 from utils import check_admin_session, create_qr_pegawai
@@ -117,6 +119,55 @@ def download_qr_pegawai(no_id):
 
     filename = f"{pegawai_data.nama}_{pegawai_data.no_id}.png"
     return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=filename)
+
+# =======================================================================
+# ROUTE: DOWNLOAD SEMUA QR CODE PEGAWAI (ZIP PER ROLE)
+# =======================================================================
+@pegawai_bp.route("/download_all_qr")
+def download_all_qr_pegawai():
+    auth_check = check_admin_session()
+    if auth_check:
+        return auth_check
+
+    pegawai_list = Pegawai.query.all()
+    if not pegawai_list:
+        flash("Tidak ada data pegawai untuk diunduh.", "warning")
+        return redirect(url_for("pegawai_bp.pegawai"))
+
+    base_folder = current_app.config['QR_FOLDER_PEGAWAI']
+    os.makedirs(base_folder, exist_ok=True)
+
+    # Buat folder sementara untuk struktur per role
+    temp_dir = os.path.join(base_folder, "temp_download")
+    os.makedirs(temp_dir, exist_ok=True)
+
+    # Bagi QR ke folder berdasarkan role
+    for peg in pegawai_list:
+        role_folder = os.path.join(temp_dir, peg.role.lower())
+        os.makedirs(role_folder, exist_ok=True)
+
+        qr_filename = f"{peg.no_id}_{peg.nama}.png"
+        qr_path = os.path.join(role_folder, qr_filename)
+
+        # Buat QR baru jika belum ada
+        qr_image = create_qr_pegawai(peg.no_id, peg.nama, peg.role)
+        qr_image.save(qr_path)
+
+    # Buat ZIP berisi semua folder
+    zip_filename = f"QR_Pegawai_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    zip_path = os.path.join(base_folder, zip_filename)
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, temp_dir)  # agar struktur folder ikut
+                zipf.write(file_path, arcname)
+
+    # Hapus folder sementara
+    import shutil
+    shutil.rmtree(temp_dir)
+
+    return send_file(zip_path, as_attachment=True)
 
 
 # =======================================================================
