@@ -41,7 +41,7 @@ def absensi_pegawai():
     if setting and setting.hari_libur_rutin:
         if nama_hari_id in setting.hari_libur_rutin.split(','):
             info_hari = f"Tanggal {tanggal_obj.strftime('%d %B %Y')} adalah hari libur rutin ({nama_hari_id})."
-    
+
     if not info_hari:
         libur_spesial = HariLibur.query.filter_by(tanggal=tanggal_obj).first()
         if libur_spesial:
@@ -62,7 +62,7 @@ def absensi_pegawai():
 
         semua_pegawai = pegawai_query.order_by(Pegawai.nama.asc()).all()
         absensi_hari_ini = AbsensiPegawai.query.filter(AbsensiPegawai.tanggal == tanggal_obj).all()
-        
+
         absensi_dict = {}
         for absen in absensi_hari_ini:
             if absen.no_id not in absensi_dict:
@@ -100,7 +100,7 @@ def absensi_pegawai():
         role_filter=request.args.get("role_filter"),
         cari_nama=request.args.get("cari_nama"),
         status=request.args.get("status"),
-        info_hari=info_hari, # Kirim info hari libur ke template
+        info_hari=info_hari,  # Kirim info hari libur ke template
         tanggal_dipilih=tanggal_obj
     )
 
@@ -188,3 +188,89 @@ def update_absensi_pegawai(no_id):
         flash("Terjadi kesalahan. Silakan coba lagi.", "danger")
 
     return redirect(url_for("absensi_pegawai_bp.absensi_pegawai", role_filter=role_filter, cari_nama=cari_nama))
+
+
+# =======================================================================
+#  ROUTE BARU: UBAH STATUS ABSENSI PEGAWAI SECARA MASAL
+# =======================================================================
+@absensi_pegawai_bp.route("/update_status_masal", methods=["POST"])
+def update_status_masal():
+    """Perbarui status absensi banyak pegawai secara masal untuk tanggal yang dipilih."""
+    auth_check = check_admin_session()
+    if auth_check:
+        return auth_check
+
+    no_id_list = request.form.getlist("no_id_list")  # Ambil list ID yang diceklis
+    status = request.form.get("status_masal")  # Ambil status baru
+    tanggal_str = request.form.get("tanggal_dipilih")  # Ambil tanggal yang sedang dilihat
+
+    if not no_id_list or not status or not tanggal_str:
+        flash("Input tidak valid. Pastikan Anda memilih setidaknya satu pegawai dan status.", "danger")
+        # Redirect ke halaman utama dengan filter tanggal yang sama
+        return redirect(
+            url_for("absensi_pegawai_bp.absensi_pegawai", tanggal=tanggal_str or datetime.today().strftime('%Y-%m-%d')))
+
+    try:
+        tanggal_obj = datetime.strptime(tanggal_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash("Format tanggal tidak valid.", "danger")
+        return redirect(url_for("absensi_pegawai_bp.absensi_pegawai"))
+
+    try:
+        updated_count = 0
+        now_time = datetime.now().time()
+
+        for no_id in no_id_list:
+            # 1. Hapus semua entri absensi untuk hari ini (masuk, pulang, atau lainnya)
+            AbsensiPegawai.query.filter_by(no_id=no_id, tanggal=tanggal_obj).delete()
+
+            # 2. Tambahkan entri baru berdasarkan status
+            if status == 'Hadir':
+                # Absensi Masuk (Hadir)
+                absen_masuk = AbsensiPegawai(
+                    no_id=no_id,
+                    tanggal=tanggal_obj,
+                    status="Hadir",
+                    jenis_absen="masuk",
+                    keterangan="Konfirmasi Hadir Masal",
+                    waktu=now_time
+                )
+                db.session.add(absen_masuk)
+
+                # Absensi Pulang (Hadir)
+                absen_pulang = AbsensiPegawai(
+                    no_id=no_id,
+                    tanggal=tanggal_obj,
+                    status="Hadir",
+                    jenis_absen="pulang",
+                    keterangan="Konfirmasi Pulang Masal",
+                    waktu=now_time
+                )
+                db.session.add(absen_pulang)
+
+            elif status in ['Sakit', 'Izin', 'Alfa']:
+                # Absensi Lainnya
+                absen_lainnya = AbsensiPegawai(
+                    no_id=no_id,
+                    tanggal=tanggal_obj,
+                    status=status,
+                    jenis_absen="lainnya",
+                    keterangan=f"Konfirmasi Masal: {status}",
+                    waktu=now_time
+                )
+                db.session.add(absen_lainnya)
+
+            updated_count += 1
+
+        db.session.commit()
+        flash(
+            f"Berhasil memperbarui status {updated_count} pegawai menjadi '{status}' untuk tanggal {tanggal_obj.strftime('%d %B %Y')}.",
+            "success")
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error update absensi pegawai masal: {e}")
+        flash("Terjadi kesalahan saat pembaruan masal. Silakan coba lagi.", "danger")
+
+    # Redirect kembali ke halaman utama dengan tanggal yang dipilih
+    return redirect(url_for("absensi_pegawai_bp.absensi_pegawai", tanggal=tanggal_str))

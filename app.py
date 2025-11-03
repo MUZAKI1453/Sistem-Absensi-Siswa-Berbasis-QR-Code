@@ -74,6 +74,7 @@ app.register_blueprint(absensi_pegawai_bp)
 app.register_blueprint(siswa_bp)
 app.register_blueprint(pegawai_bp)
 
+
 # =======================================================================
 #  FUNGSI HELPER & UTILITAS (TIDAK BERUBAH)
 # =======================================================================
@@ -81,10 +82,15 @@ def check_admin_session():
     """Periksa sesi admin, redirect ke login jika belum login."""
     return redirect(url_for("login")) if "admin" not in session else None
 
+
 def get_badge_color(status):
     """Tentukan warna badge berdasarkan status untuk filter Jinja2."""
-    return 'success' if status in ['Hadir', 'Terlambat'] else 'warning text-dark' if status == 'Izin' else 'info text-dark' if status == 'Sakit' else 'danger'
+    return 'success' if status in ['Hadir',
+                                   'Terlambat'] else 'warning text-dark' if status == 'Izin' else 'info text-dark' if status == 'Sakit' else 'danger'
+
+
 app.jinja_env.filters['get_badge_color'] = get_badge_color
+
 
 # =======================================================================
 #  ROUTE: AUTENTIKASI ADMIN (TIDAK BERUBAH)
@@ -100,10 +106,11 @@ def login():
         if request.form["username"] == ADMIN_USERNAME and request.form["password"] == ADMIN_PASSWORD:
             session["admin"] = True
             return redirect(url_for("dashboard_bp.dashboard"))
-        
+
         flash("Username atau password salah.", "danger")
         return redirect(url_for("login"))
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
@@ -111,6 +118,7 @@ def logout():
     session.clear()
     flash("Anda telah logout.", "success")
     return redirect(url_for("login"))
+
 
 # =======================================================================
 #  ROUTE: PENGATURAN UMUM (GET / POST)
@@ -147,7 +155,8 @@ def pengaturan():
                     setting_siswa.jam_masuk_selesai = datetime.strptime(jam_masuk_selesai, "%H:%M").time()
                     setting_siswa.jam_pulang_mulai = datetime.strptime(jam_pulang_mulai, "%H:%M").time()
                     setting_siswa.jam_pulang_selesai = datetime.strptime(jam_pulang_selesai, "%H:%M").time()
-                    setting_siswa.jam_terlambat_selesai = (datetime.strptime(jam_terlambat_selesai, "%H:%M").time() if jam_terlambat_selesai else None)
+                    setting_siswa.jam_terlambat_selesai = (
+                        datetime.strptime(jam_terlambat_selesai, "%H:%M").time() if jam_terlambat_selesai else None)
                     db.session.commit()
                     flash("Pengaturan waktu siswa berhasil disimpan.", "success")
             except Exception as e:
@@ -160,8 +169,10 @@ def pengaturan():
     setting_siswa = SettingWaktu.query.first()
     setting_guru_staf = SettingWaktuGuruStaf.query.first()
     shifts = ['shift1', 'shift2', 'shift3', 'shift4']
-    settings_keamanan = {s: SettingWaktuKeamanan.query.filter_by(nama_shift=s).first() or SettingWaktuKeamanan(nama_shift=s) for s in shifts}
-    
+    settings_keamanan = {
+        s: SettingWaktuKeamanan.query.filter_by(nama_shift=s).first() or SettingWaktuKeamanan(nama_shift=s) for s in
+        shifts}
+
     # Ambil data hari libur spesial
     daftar_hari_libur = HariLibur.query.order_by(HariLibur.tanggal.asc()).all()
 
@@ -169,7 +180,7 @@ def pengaturan():
     hari_libur_rutin_tersimpan = []
     if setting_siswa and setting_siswa.hari_libur_rutin:
         hari_libur_rutin_tersimpan = setting_siswa.hari_libur_rutin.split(',')
-    
+
     semua_hari = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 
     return render_template(
@@ -183,6 +194,7 @@ def pengaturan():
         semua_hari=semua_hari
     )
 
+
 # =======================================================================
 #  ROUTE BARU: KELOLA HARI LIBUR (HANYA POST)
 # =======================================================================
@@ -190,16 +202,17 @@ def pengaturan():
 def kelola_hari_libur():
     auth_check = check_admin_session()
     if auth_check: return auth_check
-    
+
     action = request.form.get("action")
 
     # --- Aksi Menyimpan Hari Libur Rutin (Checkbox) ---
     if action == "simpan_rutin":
         setting_waktu = SettingWaktu.query.first()
         if not setting_waktu:
-            flash("Harap simpan 'Pengaturan Waktu Siswa' setidaknya sekali sebelum mengatur hari libur rutin.", "warning")
+            flash("Harap simpan 'Pengaturan Waktu Siswa' setidaknya sekali sebelum mengatur hari libur rutin.",
+                  "warning")
             return redirect(url_for("pengaturan"))
-            
+
         libur_rutin_terpilih = request.form.getlist('hari_rutin')
         setting_waktu.hari_libur_rutin = ",".join(libur_rutin_terpilih)
         db.session.commit()
@@ -238,6 +251,7 @@ def kelola_hari_libur():
 
     return redirect(url_for("pengaturan"))
 
+
 # =======================================================================
 #  ROUTE LAINNYA (TIDAK BERUBAH)
 # =======================================================================
@@ -250,12 +264,16 @@ def api_get_setting_siswa():
     setting = SettingWaktu.query.first()
     data = {
         "jam_masuk_mulai": setting.jam_masuk_mulai.strftime("%H:%M") if setting and setting.jam_masuk_mulai else "",
-        "jam_masuk_selesai": setting.jam_masuk_selesai.strftime("%H:%M") if setting and setting.jam_masuk_selesai else "",
-        "jam_terlambat_selesai": setting.jam_terlambat_selesai.strftime("%H:%M") if setting and setting.jam_terlambat_selesai else "",
+        "jam_masuk_selesai": setting.jam_masuk_selesai.strftime(
+            "%H:%M") if setting and setting.jam_masuk_selesai else "",
+        "jam_terlambat_selesai": setting.jam_terlambat_selesai.strftime(
+            "%H:%M") if setting and setting.jam_terlambat_selesai else "",
         "jam_pulang_mulai": setting.jam_pulang_mulai.strftime("%H:%M") if setting and setting.jam_pulang_mulai else "",
-        "jam_pulang_selesai": setting.jam_pulang_selesai.strftime("%H:%M") if setting and setting.jam_pulang_selesai else ""
+        "jam_pulang_selesai": setting.jam_pulang_selesai.strftime(
+            "%H:%M") if setting and setting.jam_pulang_selesai else ""
     }
     return jsonify(data)
+
 
 @app.route("/pengaturan_pegawai", methods=["GET", "POST"])
 def pengaturan_pegawai():
@@ -301,7 +319,8 @@ def pengaturan_pegawai():
                     jam_masuk_selesai = datetime.strptime(jam_masuk_selesai_str, "%H:%M").time()
                     jam_pulang_mulai = datetime.strptime(jam_pulang_mulai_str, "%H:%M").time()
                     jam_pulang_selesai = datetime.strptime(jam_pulang_selesai_str, "%H:%M").time()
-                    jam_terlambat_selesai = datetime.strptime(jam_terlambat_selesai_str, "%H:%M").time() if jam_terlambat_selesai_str else None
+                    jam_terlambat_selesai = datetime.strptime(jam_terlambat_selesai_str,
+                                                              "%H:%M").time() if jam_terlambat_selesai_str else None
 
                     if setting_type == "guru_staf":
                         if not setting_guru_staf:
@@ -326,13 +345,14 @@ def pengaturan_pegawai():
                         current_setting.jam_terlambat_selesai = jam_terlambat_selesai
                         shift_display_name = setting_type.capitalize().replace('Shift', 'Shift ')
                         flash(f"Pengaturan waktu Keamanan {shift_display_name} berhasil diperbarui.", "success")
-                    
+
                     db.session.commit()
         except Exception as e:
             db.session.rollback()
             flash(f"Terjadi kesalahan saat menyimpan: {str(e)}", "danger")
 
     return redirect(url_for("pengaturan"))
+
 
 # =======================================================================
 #  MAIN EXECUTION
