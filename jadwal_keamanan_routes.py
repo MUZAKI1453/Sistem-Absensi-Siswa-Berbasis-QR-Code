@@ -1,15 +1,18 @@
-from datetime import datetime, date
 import calendar as cal
+from datetime import datetime, date
+
 from flask import (
     Blueprint, Response, render_template, flash, redirect,
     url_for, request, current_app
 )
 from sqlalchemy import select, delete
+
 from models import JadwalKeamanan, Pegawai, db
 from utils import check_admin_session
 
 # 🟢 Inisialisasi Blueprint
 jadwal_keamanan_bp = Blueprint("jadwal_keamanan_bp", __name__, url_prefix="/jadwal_keamanan")
+
 
 # ==============================================================================
 # HALAMAN UTAMA JADWAL KEAMANAN
@@ -57,6 +60,7 @@ def jadwal_keamanan():
         date=date
     )
 
+
 # ==============================================================================
 # SIMPAN JADWAL KEAMANAN
 # ==============================================================================
@@ -86,6 +90,7 @@ def simpan_jadwal_keamanan():
         flash("Gagal menyimpan jadwal ke database.", "danger")
 
     return redirect(url_for("jadwal_keamanan_bp.jadwal_keamanan", month=current_month, year=current_year))
+
 
 # ==============================================================================
 # COPY JADWAL BULAN SEBELUMNYA
@@ -155,6 +160,7 @@ def copy_previous_schedule():
 
     return redirect(url_for("jadwal_keamanan_bp.jadwal_keamanan", month=current_month, year=current_year))
 
+
 # ==============================================================================
 # UTILITAS INTERNAL (PENGGANTI security_utils)
 # ==============================================================================
@@ -170,6 +176,7 @@ def get_security_staff():
     except Exception as e:
         current_app.logger.error(f"Error fetching security staff: {e}")
         return []
+
 
 def get_monthly_schedule(month, year):
     """Ambil jadwal keamanan untuk bulan dan tahun tertentu."""
@@ -196,6 +203,7 @@ def get_monthly_schedule(month, year):
     except Exception as e:
         current_app.logger.error(f"Error fetching monthly schedule: {e}")
         return {}
+
 
 def save_monthly_schedule(month, year, form_data):
     """Simpan atau perbarui jadwal keamanan bulanan ke database."""

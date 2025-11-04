@@ -34,7 +34,7 @@ def create_qr_siswa(nis, nama):
     # Dua baris teks (nama dan NIS)
     text_lines = [nama, str(nis)]
     line_spacing = 5  # jarak antar baris
-    padding_top = 1   # jarak antara QR dan teks
+    padding_top = 1  # jarak antara QR dan teks
 
     # Hitung ukuran teks total
     draw_tmp = ImageDraw.Draw(qr_img)
@@ -81,7 +81,7 @@ def create_qr_pegawai(no_id, nama, role):
     text_h = sum(font.getbbox(line)[3] - font.getbbox(line)[1] for line in text_lines) + line_spacing
 
     # Tambahkan margin bawah agar teks tidak kepotong
-    padding_top = 1     # jarak antara QR dan teks
+    padding_top = 1  # jarak antara QR dan teks
     margin_bottom = 20  # ruang ekstra di bawah teks
 
     new_height = qr_img.height + text_h + padding_top + margin_bottom

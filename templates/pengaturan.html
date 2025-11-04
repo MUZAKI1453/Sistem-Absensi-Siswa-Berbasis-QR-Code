@@ -2,375 +2,480 @@
 {% block title %}Pengaturan{% endblock %}
 
 {% block content %}
-{% set setting_guru_staf = setting_guru_staf if setting_guru_staf is defined else None %}
-{% set settings_keamanan = settings_keamanan if settings_keamanan is defined else {} %}
-{% set setting_siswa_data = setting_siswa_data if setting_siswa_data is defined else None %}
-{% set daftar_hari_libur = daftar_hari_libur if daftar_hari_libur is defined else [] %}
-{% set hari_libur_rutin_tersimpan = hari_libur_rutin_tersimpan if hari_libur_rutin_tersimpan is defined else [] %}
-{% set semua_hari = semua_hari if semua_hari is defined else [] %}
-{% set shifts = ['shift1', 'shift2', 'shift3', 'shift4'] %}
+    {% set setting_guru_staf = setting_guru_staf if setting_guru_staf is defined else None %}
+    {% set settings_keamanan = settings_keamanan if settings_keamanan is defined else {} %}
+    {% set setting_siswa_data = setting_siswa_data if setting_siswa_data is defined else None %}
+    {% set daftar_hari_libur = daftar_hari_libur if daftar_hari_libur is defined else [] %}
+    {% set hari_libur_rutin_tersimpan = hari_libur_rutin_tersimpan if hari_libur_rutin_tersimpan is defined else [] %}
+    {% set semua_hari = semua_hari if semua_hari is defined else [] %}
+    {% set shifts = ['shift1', 'shift2', 'shift3', 'shift4'] %}
 
 
-<div class="container mb-5">
-    <h3 class="fw-bold mb-4 page-title"><i class="bi bi-gear-fill me-2"></i>Pengaturan Sistem Absensi</h3>
-    <div class="row g-4 justify-content-center">
-        <div class="col-lg-4 col-md-6">
-            <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-primary text-white">
-                <div class="text-center">
-                    <i class="bi bi-mortarboard-fill h1 mb-3"></i>
-                    <h5 class="fw-bold">Pengaturan Waktu Siswa</h5>
-                    <p class="mb-4">Atur jadwal masuk, terlambat, dan pulang untuk semua siswa.</p>
-                    <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#aturWaktuSiswaModal">
-                        Atur Siswa
-                    </button>
+    <div class="container mb-5">
+        <h3 class="fw-bold mb-4 page-title"><i class="bi bi-gear-fill me-2"></i>Pengaturan Sistem Absensi</h3>
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-primary text-white">
+                    <div class="text-center">
+                        <i class="bi bi-mortarboard-fill h1 mb-3"></i>
+                        <h5 class="fw-bold">Pengaturan Waktu Siswa</h5>
+                        <p class="mb-4">Atur jadwal masuk, terlambat, dan pulang untuk semua siswa.</p>
+                        <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal"
+                                data-bs-target="#aturWaktuSiswaModal">
+                            Atur Siswa
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-warning text-dark">
+                    <div class="text-center">
+                        <i class="bi bi-person-workspace h1 mb-3"></i>
+                        <h5 class="fw-bold">Pengaturan Waktu Pegawai</h5>
+                        <p class="mb-4">Atur jadwal untuk Guru, Staf, dan Shift Keamanan.</p>
+                        <button class="btn btn-dark btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal"
+                                data-bs-target="#aturWaktuPegawaiModal">
+                            Atur Pegawai
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-danger text-white">
+                    <div class="text-center">
+                        <i class="bi bi-calendar-x-fill h1 mb-3"></i>
+                        <h5 class="fw-bold">Pengaturan Hari Libur</h5>
+                        <p class="mb-4">Atur libur rutin mingguan dan libur tanggal merah.</p>
+                        <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal"
+                                data-bs-target="#aturHariLiburModal">
+                            Atur Hari Libur
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-4 col-md-6">
-            <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-warning text-dark">
-                 <div class="text-center">
-                    <i class="bi bi-person-workspace h1 mb-3"></i>
-                    <h5 class="fw-bold">Pengaturan Waktu Pegawai</h5>
-                    <p class="mb-4">Atur jadwal untuk Guru, Staf, dan Shift Keamanan.</p>
-                    <button class="btn btn-dark btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#aturWaktuPegawaiModal">
-                        Atur Pegawai
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-lg-4 col-md-6">
-            <div class="card p-4 shadow-lg border-0 rounded-4 h-100 d-flex justify-content-center bg-danger text-white">
-                 <div class="text-center">
-                    <i class="bi bi-calendar-x-fill h1 mb-3"></i>
-                    <h5 class="fw-bold">Pengaturan Hari Libur</h5>
-                    <p class="mb-4">Atur libur rutin mingguan dan libur tanggal merah.</p>
-                    <button class="btn btn-light btn-lg rounded-pill px-5 fw-bold" data-bs-toggle="modal" data-bs-target="#aturHariLiburModal">
-                        Atur Hari Libur
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-
-<div class="modal fade" id="aturHariLiburModal" tabindex="-1" aria-labelledby="aturHariLiburModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold" id="aturHariLiburModalLabel"><i class="bi bi-calendar-x-fill me-2"></i>Atur Hari Libur</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <form action="{{ url_for('kelola_hari_libur') }}" method="POST">
-                    <input type="hidden" name="action" value="simpan_rutin">
-                    <h6 class="text-dark fw-bold">1. Hari Libur Rutin Mingguan</h6>
-                    <p class="text-muted small">Centang hari yang dianggap libur setiap minggu.</p>
-                    <div class="d-flex flex-wrap gap-3 mb-3 p-3 bg-light rounded-3 border">
-                        {% for hari in semua_hari %}
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="hari_rutin" value="{{ hari }}" id="check_{{ hari }}"
-                                   {% if hari in hari_libur_rutin_tersimpan %}checked{% endif %}>
-                            <label class="form-check-label" for="check_{{ hari }}">
-                                {{ hari }}
-                            </label>
-                        </div>
-                        {% endfor %}
+        <div class="modal fade" id="aturHariLiburModal" tabindex="-1" aria-labelledby="aturHariLiburModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title fw-bold" id="aturHariLiburModalLabel"><i
+                                class="bi bi-calendar-x-fill me-2"></i>Atur Hari Libur</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
                     </div>
-                    <button type="submit" class="btn btn-danger px-4">Simpan Libur Rutin</button>
-                </form>
-
-                <hr class="my-4">
-
-                <h6 class="text-dark fw-bold">2. Tambah Libur Spesial (Tanggal Merah)</h6>
-                <form action="{{ url_for('kelola_hari_libur') }}" method="POST" class="row g-3 align-items-end mb-4 pb-3 border-bottom">
-                    <input type="hidden" name="action" value="tambah_spesial">
-                    <div class="col-md-4">
-                        <label for="tanggal_libur" class="form-label">Tanggal</label>
-                        <input type="date" class="form-control" id="tanggal_libur" name="tanggal" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="keterangan_libur" class="form-label">Keterangan</label>
-                        <input type="text" class="form-control" id="keterangan_libur" name="keterangan" placeholder="Contoh: Cuti Bersama Idul Fitri" required>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-outline-danger w-100">Tambah</button>
-                    </div>
-                </form>
-
-                <h6 class="text-dark fw-bold mt-4">Daftar Libur Spesial Tersimpan</h6>
-                <div class="table-responsive" style="max-height: 250px;">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Keterangan</th>
-                                <th class="text-end">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for libur in daftar_hari_libur %}
-                            <tr>
-                                <td class="text-nowrap">{{ libur.tanggal.strftime('%d %B %Y') }}</td>
-                                <td>{{ libur.keterangan }}</td>
-                                <td class="text-end">
-                                    <form action="{{ url_for('kelola_hari_libur') }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus hari libur ini?');">
-                                        <input type="hidden" name="action" value="hapus_spesial">
-                                        <input type="hidden" name="id" value="{{ libur.id }}">
-                                        <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="3" class="text-center text-muted">Belum ada libur spesial yang ditambahkan.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="aturWaktuSiswaModal" tabindex="-1" aria-labelledby="aturWaktuSiswaModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title fw-bold" id="aturWaktuSiswaModalLabel">Atur Waktu Absensi Siswa</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form method="POST" action="{{ url_for('pengaturan') }}">
-        <div class="modal-body">
-          <input type="hidden" name="setting_type" value="siswa">
-          <input type="hidden" name="action" value="save_siswa">
-          <div class="card card-body shadow-sm mb-4">
-            <h6 class="text-primary fw-bold mb-3">1. Waktu Masuk</h6>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="jam_masuk_mulai_s" class="form-label">Mulai Absen Masuk</label>
-                <input type="time" id="jam_masuk_mulai_s" name="jam_masuk_mulai" class="form-control"
-                       value="{{ setting_siswa_data.jam_masuk_mulai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_masuk_mulai else '' }}" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="jam_masuk_selesai_s" class="form-label">Akhir Absen Masuk</label>
-                <input type="time" id="jam_masuk_selesai_s" name="jam_masuk_selesai" class="form-control"
-                       value="{{ setting_siswa_data.jam_masuk_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_masuk_selesai else '' }}" required>
-              </div>
-            </div>
-          </div>
-          <div class="card card-body shadow-sm mb-4">
-            <h6 class="text-danger fw-bold mb-3">2. Batas Terlambat</h6>
-            <label for="jam_terlambat_selesai_s" class="form-label">Batas Scan Terlambat</label>
-            <input type="time" class="form-control" id="jam_terlambat_selesai_s" name="jam_terlambat_selesai"
-                   value="{{ setting_siswa_data.jam_terlambat_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_terlambat_selesai else '' }}">
-            <div class="form-text">Scan antara <b>Akhir Absen Masuk</b> dan waktu ini dianggap <b>Terlambat</b>.</div>
-          </div>
-          <div class="card card-body shadow-sm">
-            <h6 class="text-success fw-bold mb-3">3. Waktu Pulang</h6>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label for="jam_pulang_mulai_s" class="form-label">Mulai Absen Pulang</label>
-                <input type="time" id="jam_pulang_mulai_s" name="jam_pulang_mulai" class="form-control"
-                       value="{{ setting_siswa_data.jam_pulang_mulai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_pulang_mulai else '' }}" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="jam_pulang_selesai_s" class="form-label">Akhir Absen Pulang</label>
-                <input type="time" id="jam_pulang_selesai_s" name="jam_pulang_selesai" class="form-control"
-                       value="{{ setting_siswa_data.jam_pulang_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_pulang_selesai else '' }}" required>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer d-flex justify-content-between">
-          <button type="button" id="btnResetSiswa" class="btn btn-warning" data-api-url="{{ url_for('api_get_setting_siswa') }}">
-            🔄 Reset Form
-          </button>
-          <button type="submit" class="btn btn-primary">💾 Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-
-<div class="modal fade" id="aturWaktuPegawaiModal" tabindex="-1" aria-labelledby="aturWaktuPegawaiModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold" id="aturWaktuPegawaiModalLabel">Atur Waktu Absensi Pegawai</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="lead text-muted text-center">Kelola waktu absensi spesifik untuk Guru, Staf, dan setiap Shift Keamanan.</p>
-                <ul class="nav nav-tabs mb-4" id="pegawaiSettingsTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="guru-staf-tab" data-bs-toggle="tab" data-bs-target="#guru-staf" type="button" role="tab" aria-controls="guru-staf" aria-selected="true">Guru & Staf</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="keamanan-tab" data-bs-toggle="tab" data-bs-target="#keamanan" type="button" role="tab" aria-controls="keamanan" aria-selected="false">Keamanan (Multi-Shift)</button>
-                    </li>
-                </ul>
-                <div class="tab-content" id="pegawaiSettingsTabContent">
-                    <div class="tab-pane fade show active" id="guru-staf" role="tabpanel" aria-labelledby="guru-staf-tab">
-                        <h5 class="fw-bold mb-3 text-primary">Waktu Guru & Staf</h5>
-                        <p class="text-muted mb-4">Berlaku untuk semua pegawai dengan Role **Guru** dan **Staf**.</p>
-                        {% set setting = setting_guru_staf %}
-                        <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" class="mt-4">
-                            <input type="hidden" name="setting_type" value="guru_staf">
-                            <input type="hidden" name="action" value="save">
-                            <div class="card card-body shadow-lg mb-4 p-4 border-2 border-primary">
-                                <div class="mb-4 pb-3 border-bottom border-primary">
-                                    <h6 class="text-primary fw-bold mb-3"><i class="bi bi-clock-fill me-2"></i>Waktu Masuk</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="gsmulai" class="form-label small fw-semibold">Mulai</label>
-                                            <input type="time" id="gsmulai" name="jam_masuk_mulai" class="form-control" value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="gsselesai" class="form-label small fw-semibold">Akhir</label>
-                                            <input type="time" id="gsselesai" name="jam_masuk_selesai" class="form-control" value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}" required>
-                                        </div>
+                    <div class="modal-body p-4">
+                        <form action="{{ url_for('kelola_hari_libur') }}" method="POST">
+                            <input type="hidden" name="action" value="simpan_rutin">
+                            <h6 class="text-dark fw-bold">1. Hari Libur Rutin Mingguan</h6>
+                            <p class="text-muted small">Centang hari yang dianggap libur setiap minggu.</p>
+                            <div class="d-flex flex-wrap gap-3 mb-3 p-3 bg-light rounded-3 border">
+                                {% for hari in semua_hari %}
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="hari_rutin"
+                                               value="{{ hari }}" id="check_{{ hari }}"
+                                               {% if hari in hari_libur_rutin_tersimpan %}checked{% endif %}>
+                                        <label class="form-check-label" for="check_{{ hari }}">
+                                            {{ hari }}
+                                        </label>
                                     </div>
-                                </div>
-                                <div class="mb-4 pb-3 border-bottom border-danger">
-                                    <h6 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Batas Terlambat</h6>
-                                    <div class="row justify-content-center">
-                                        <div class="col-md-6">
-                                            <label for="gstelat" class="form-label small fw-semibold">Batas Scan</label>
-                                            <input type="time" class="form-control" id="gstelat" name="jam_terlambat_selesai" value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai else '' }}">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2 pt-3">
-                                    <h6 class="text-success fw-bold mb-3"><i class="bi bi-house-door-fill me-2"></i>Waktu Pulang</h6>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="gspulangmulai" class="form-label small fw-semibold">Mulai</label>
-                                            <input type="time" id="gspulangmulai" name="jam_pulang_mulai" class="form-control" value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="gspulangselesai" class="form-label small fw-semibold">Akhir</label>
-                                            <input type="time" id="gspulangselesai" name="jam_pulang_selesai" class="form-control" value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}" required>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% endfor %}
                             </div>
-                            <div class="d-flex justify-content-between pt-3 border-top">
-                                <button type="submit" name="action" value="reset" class="btn btn-outline-danger" formaction="{{ url_for('pengaturan_pegawai') }}" {% if not setting or not setting.id %}disabled{% endif %} onclick="return confirm('Yakin ingin mereset waktu Guru & Staf?');">Reset Waktu</button>
-                                <button type="submit" class="btn btn-primary px-5">Simpan</button>
+                            <button type="submit" class="btn btn-danger px-4">Simpan Libur Rutin</button>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <h6 class="text-dark fw-bold">2. Tambah Libur Spesial (Tanggal Merah)</h6>
+                        <form action="{{ url_for('kelola_hari_libur') }}" method="POST"
+                              class="row g-3 align-items-end mb-4 pb-3 border-bottom">
+                            <input type="hidden" name="action" value="tambah_spesial">
+                            <div class="col-md-4">
+                                <label for="tanggal_libur" class="form-label">Tanggal</label>
+                                <input type="date" class="form-control" id="tanggal_libur" name="tanggal" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="keterangan_libur" class="form-label">Keterangan</label>
+                                <input type="text" class="form-control" id="keterangan_libur" name="keterangan"
+                                       placeholder="Contoh: Cuti Bersama Idul Fitri" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-outline-danger w-100">Tambah</button>
                             </div>
                         </form>
+
+                        <h6 class="text-dark fw-bold mt-4">Daftar Libur Spesial Tersimpan</h6>
+                        <div class="table-responsive" style="max-height: 250px;">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-light">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Keterangan</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for libur in daftar_hari_libur %}
+                                    <tr>
+                                        <td class="text-nowrap">{{ libur.tanggal.strftime('%d %B %Y') }}</td>
+                                        <td>{{ libur.keterangan }}</td>
+                                        <td class="text-end">
+                                            <form action="{{ url_for('kelola_hari_libur') }}" method="POST"
+                                                  onsubmit="return confirm('Yakin ingin menghapus hari libur ini?');">
+                                                <input type="hidden" name="action" value="hapus_spesial">
+                                                <input type="hidden" name="id" value="{{ libur.id }}">
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm"><i
+                                                        class="bi bi-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Belum ada libur spesial yang
+                                            ditambahkan.
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div class="tab-pane fade" id="keamanan" role="tabpanel" aria-labelledby="keamanan-tab">
-                        <h5 class="fw-bold mb-3 text-success">Waktu Keamanan (4 Shift)</h5>
-                        <p class="text-muted">Atur rentang waktu absensi yang unik untuk setiap shift.</p>
-                        <ul class="nav nav-pills mb-3 border-bottom pb-3" id="pills-tab" role="tablist">
-                            {% for shift_name in shifts %}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="aturWaktuSiswaModal" tabindex="-1" aria-labelledby="aturWaktuSiswaModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold" id="aturWaktuSiswaModalLabel">Atur Waktu Absensi Siswa</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('pengaturan') }}">
+                        <div class="modal-body">
+                            <input type="hidden" name="setting_type" value="siswa">
+                            <input type="hidden" name="action" value="save_siswa">
+                            <div class="card card-body shadow-sm mb-4">
+                                <h6 class="text-primary fw-bold mb-3">1. Waktu Masuk</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="jam_masuk_mulai_s" class="form-label">Mulai Absen Masuk</label>
+                                        <input type="time" id="jam_masuk_mulai_s" name="jam_masuk_mulai"
+                                               class="form-control"
+                                               value="{{ setting_siswa_data.jam_masuk_mulai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_masuk_mulai else '' }}"
+                                               required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="jam_masuk_selesai_s" class="form-label">Akhir Absen Masuk</label>
+                                        <input type="time" id="jam_masuk_selesai_s" name="jam_masuk_selesai"
+                                               class="form-control"
+                                               value="{{ setting_siswa_data.jam_masuk_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_masuk_selesai else '' }}"
+                                               required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card card-body shadow-sm mb-4">
+                                <h6 class="text-danger fw-bold mb-3">2. Batas Terlambat</h6>
+                                <label for="jam_terlambat_selesai_s" class="form-label">Batas Scan Terlambat</label>
+                                <input type="time" class="form-control" id="jam_terlambat_selesai_s"
+                                       name="jam_terlambat_selesai"
+                                       value="{{ setting_siswa_data.jam_terlambat_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_terlambat_selesai else '' }}">
+                                <div class="form-text">Scan antara <b>Akhir Absen Masuk</b> dan waktu ini dianggap <b>Terlambat</b>.
+                                </div>
+                            </div>
+                            <div class="card card-body shadow-sm">
+                                <h6 class="text-success fw-bold mb-3">3. Waktu Pulang</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="jam_pulang_mulai_s" class="form-label">Mulai Absen Pulang</label>
+                                        <input type="time" id="jam_pulang_mulai_s" name="jam_pulang_mulai"
+                                               class="form-control"
+                                               value="{{ setting_siswa_data.jam_pulang_mulai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_pulang_mulai else '' }}"
+                                               required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="jam_pulang_selesai_s" class="form-label">Akhir Absen Pulang</label>
+                                        <input type="time" id="jam_pulang_selesai_s" name="jam_pulang_selesai"
+                                               class="form-control"
+                                               value="{{ setting_siswa_data.jam_pulang_selesai.strftime('%H:%M') if setting_siswa_data and setting_siswa_data.jam_pulang_selesai else '' }}"
+                                               required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" id="btnResetSiswa" class="btn btn-warning"
+                                    data-api-url="{{ url_for('api_get_setting_siswa') }}">
+                                🔄 Reset Form
+                            </button>
+                            <button type="submit" class="btn btn-primary">💾 Simpan</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="aturWaktuPegawaiModal" tabindex="-1" aria-labelledby="aturWaktuPegawaiModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title fw-bold" id="aturWaktuPegawaiModalLabel">Atur Waktu Absensi Pegawai</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="lead text-muted text-center">Kelola waktu absensi spesifik untuk Guru, Staf, dan
+                            setiap Shift Keamanan.</p>
+                        <ul class="nav nav-tabs mb-4" id="pegawaiSettingsTab" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link {% if loop.first %}active{% endif %}" id="pills-{{ shift_name }}-tab" data-bs-toggle="pill" data-bs-target="#pills-{{ shift_name }}" type="button" role="tab">{{ shift_name.capitalize().replace('shift', 'Shift ') }}</button>
+                                <button class="nav-link active" id="guru-staf-tab" data-bs-toggle="tab"
+                                        data-bs-target="#guru-staf" type="button" role="tab" aria-controls="guru-staf"
+                                        aria-selected="true">Guru & Staf
+                                </button>
                             </li>
-                            {% endfor %}
-                            <li class="nav-item ms-auto" role="presentation">
-                                <form method="POST" action="{{ url_for('pengaturan_pegawai') }}">
-                                    <input type="hidden" name="action" value="reset">
-                                    <input type="hidden" name="setting_type" value="keamanan_all">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger mt-1" onclick="return confirm('PERINGATAN! Ini akan mereset SEMUA pengaturan Shift Keamanan. Lanjutkan?');">Reset Semua Shift</button>
-                                </form>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="keamanan-tab" data-bs-toggle="tab"
+                                        data-bs-target="#keamanan" type="button" role="tab" aria-controls="keamanan"
+                                        aria-selected="false">Keamanan (Multi-Shift)
+                                </button>
                             </li>
                         </ul>
-                        <div class="tab-content" id="pills-tabContent">
-                            {% for shift_name in shifts %}
-                            {% set setting = settings_keamanan.get(shift_name) %}
-                            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="pills-{{ shift_name }}" role="tabpanel">
-                                <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" class="mt-4 p-3 border rounded-3 bg-light">
-                                    <input type="hidden" name="setting_type" value="{{ shift_name }}">
+                        <div class="tab-content" id="pegawaiSettingsTabContent">
+                            <div class="tab-pane fade show active" id="guru-staf" role="tabpanel"
+                                 aria-labelledby="guru-staf-tab">
+                                <h5 class="fw-bold mb-3 text-primary">Waktu Guru & Staf</h5>
+                                <p class="text-muted mb-4">Berlaku untuk semua pegawai dengan Role **Guru** dan
+                                    **Staf**.</p>
+                                {% set setting = setting_guru_staf %}
+                                <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" class="mt-4">
+                                    <input type="hidden" name="setting_type" value="guru_staf">
                                     <input type="hidden" name="action" value="save">
-                                    <h6 class="text-muted border-bottom pb-2 mb-3 fw-bold">{{ shift_name.capitalize().replace('shift', 'Pengaturan Shift ') }}</h6>
-                                    <div class="card card-body shadow-sm mb-4 p-4 border-2 border-success">
+                                    <div class="card card-body shadow-lg mb-4 p-4 border-2 border-primary">
                                         <div class="mb-4 pb-3 border-bottom border-primary">
-                                            <h6 class="text-primary fw-bold mb-3"><i class="bi bi-clock-fill me-2"></i>Waktu Masuk</h6>
+                                            <h6 class="text-primary fw-bold mb-3"><i class="bi bi-clock-fill me-2"></i>Waktu
+                                                Masuk</h6>
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="{{ shift_name }}_masuk_mulai" class="form-label small fw-semibold">Mulai</label>
-                                                    <input type="time" id="{{ shift_name }}_masuk_mulai" name="jam_masuk_mulai" class="form-control" value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}" required>
+                                                    <label for="gsmulai"
+                                                           class="form-label small fw-semibold">Mulai</label>
+                                                    <input type="time" id="gsmulai" name="jam_masuk_mulai"
+                                                           class="form-control"
+                                                           value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}"
+                                                           required>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="{{ shift_name }}_masuk_selesai" class="form-label small fw-semibold">Akhir</label>
-                                                    <input type="time" id="{{ shift_name }}_masuk_selesai" name="jam_masuk_selesai" class="form-control" value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}" required>
+                                                    <label for="gsselesai"
+                                                           class="form-label small fw-semibold">Akhir</label>
+                                                    <input type="time" id="gsselesai" name="jam_masuk_selesai"
+                                                           class="form-control"
+                                                           value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}"
+                                                           required>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="mb-4 pb-3 border-bottom border-danger">
-                                            <h6 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>Batas Terlambat</h6>
+                                            <h6 class="text-danger fw-bold mb-3"><i
+                                                    class="bi bi-exclamation-triangle-fill me-2"></i>Batas Terlambat
+                                            </h6>
                                             <div class="row justify-content-center">
                                                 <div class="col-md-6">
-                                                    <label for="{{ shift_name }}_terlambat" class="form-label small fw-semibold">Batas Scan</label>
-                                                    <input type="time" class="form-control" id="{{ shift_name }}_terlambat" name="jam_terlambat_selesai" value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai else '' }}">
+                                                    <label for="gstelat" class="form-label small fw-semibold">Batas
+                                                        Scan</label>
+                                                    <input type="time" class="form-control" id="gstelat"
+                                                           name="jam_terlambat_selesai"
+                                                           value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai else '' }}">
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="mt-2 pt-3">
-                                            <h6 class="text-success fw-bold mb-3"><i class="bi bi-house-door-fill me-2"></i>Waktu Pulang</h6>
+                                            <h6 class="text-success fw-bold mb-3"><i
+                                                    class="bi bi-house-door-fill me-2"></i>Waktu Pulang</h6>
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="{{ shift_name }}_pulang_mulai" class="form-label small fw-semibold">Mulai</label>
-                                                    <input type="time" id="{{ shift_name }}_pulang_mulai" name="jam_pulang_mulai" class="form-control" value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}" required>
+                                                    <label for="gspulangmulai" class="form-label small fw-semibold">Mulai</label>
+                                                    <input type="time" id="gspulangmulai" name="jam_pulang_mulai"
+                                                           class="form-control"
+                                                           value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}"
+                                                           required>
                                                 </div>
                                                 <div class="col-md-6 mb-3">
-                                                    <label for="{{ shift_name }}_pulang_selesai" class="form-label small fw-semibold">Akhir</label>
-                                                    <input type="time" id="{{ shift_name }}_pulang_selesai" name="jam_pulang_selesai" class="form-control" value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}" required>
+                                                    <label for="gspulangselesai" class="form-label small fw-semibold">Akhir</label>
+                                                    <input type="time" id="gspulangselesai" name="jam_pulang_selesai"
+                                                           class="form-control"
+                                                           value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}"
+                                                           required>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="d-flex justify-content-between pt-3 border-top mt-3">
-                                        <button type="submit" name="action" value="reset" class="btn btn-outline-danger" formaction="{{ url_for('pengaturan_pegawai') }}" {% if not setting or not setting.id %}disabled{% endif %} onclick="return confirm('Yakin ingin mereset waktu {{ shift_name.capitalize().replace('shift', 'Shift ') }}?');">Reset</button>
-                                        <button type="submit" class="btn btn-success px-5">Simpan</button>
+                                    <div class="d-flex justify-content-between pt-3 border-top">
+                                        <button type="submit" name="action" value="reset" class="btn btn-outline-danger"
+                                                formaction="{{ url_for('pengaturan_pegawai') }}"
+                                                {% if not setting or not setting.id %}disabled{% endif %}
+                                                onclick="return confirm('Yakin ingin mereset waktu Guru & Staf?');">
+                                            Reset Waktu
+                                        </button>
+                                        <button type="submit" class="btn btn-primary px-5">Simpan</button>
                                     </div>
                                 </form>
                             </div>
-                            {% endfor %}
+                            <div class="tab-pane fade" id="keamanan" role="tabpanel" aria-labelledby="keamanan-tab">
+                                <h5 class="fw-bold mb-3 text-success">Waktu Keamanan (4 Shift)</h5>
+                                <p class="text-muted">Atur rentang waktu absensi yang unik untuk setiap shift.</p>
+                                <ul class="nav nav-pills mb-3 border-bottom pb-3" id="pills-tab" role="tablist">
+                                    {% for shift_name in shifts %}
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link {% if loop.first %}active{% endif %}"
+                                                    id="pills-{{ shift_name }}-tab" data-bs-toggle="pill"
+                                                    data-bs-target="#pills-{{ shift_name }}" type="button"
+                                                    role="tab">{{ shift_name.capitalize().replace('shift', 'Shift ') }}</button>
+                                        </li>
+                                    {% endfor %}
+                                    <li class="nav-item ms-auto" role="presentation">
+                                        <form method="POST" action="{{ url_for('pengaturan_pegawai') }}">
+                                            <input type="hidden" name="action" value="reset">
+                                            <input type="hidden" name="setting_type" value="keamanan_all">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger mt-1"
+                                                    onclick="return confirm('PERINGATAN! Ini akan mereset SEMUA pengaturan Shift Keamanan. Lanjutkan?');">
+                                                Reset Semua Shift
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="pills-tabContent">
+                                    {% for shift_name in shifts %}
+                                        {% set setting = settings_keamanan.get(shift_name) %}
+                                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                                             id="pills-{{ shift_name }}" role="tabpanel">
+                                            <form method="POST" action="{{ url_for('pengaturan_pegawai') }}"
+                                                  class="mt-4 p-3 border rounded-3 bg-light">
+                                                <input type="hidden" name="setting_type" value="{{ shift_name }}">
+                                                <input type="hidden" name="action" value="save">
+                                                <h6 class="text-muted border-bottom pb-2 mb-3 fw-bold">{{ shift_name.capitalize().replace('shift', 'Pengaturan Shift ') }}</h6>
+                                                <div class="card card-body shadow-sm mb-4 p-4 border-2 border-success">
+                                                    <div class="mb-4 pb-3 border-bottom border-primary">
+                                                        <h6 class="text-primary fw-bold mb-3"><i
+                                                                class="bi bi-clock-fill me-2"></i>Waktu Masuk</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="{{ shift_name }}_masuk_mulai"
+                                                                       class="form-label small fw-semibold">Mulai</label>
+                                                                <input type="time" id="{{ shift_name }}_masuk_mulai"
+                                                                       name="jam_masuk_mulai" class="form-control"
+                                                                       value="{{ setting.jam_masuk_mulai.strftime('%H:%M') if setting and setting.jam_masuk_mulai else '' }}"
+                                                                       required>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="{{ shift_name }}_masuk_selesai"
+                                                                       class="form-label small fw-semibold">Akhir</label>
+                                                                <input type="time" id="{{ shift_name }}_masuk_selesai"
+                                                                       name="jam_masuk_selesai" class="form-control"
+                                                                       value="{{ setting.jam_masuk_selesai.strftime('%H:%M') if setting and setting.jam_masuk_selesai else '' }}"
+                                                                       required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-4 pb-3 border-bottom border-danger">
+                                                        <h6 class="text-danger fw-bold mb-3"><i
+                                                                class="bi bi-exclamation-triangle-fill me-2"></i>Batas
+                                                            Terlambat</h6>
+                                                        <div class="row justify-content-center">
+                                                            <div class="col-md-6">
+                                                                <label for="{{ shift_name }}_terlambat"
+                                                                       class="form-label small fw-semibold">Batas
+                                                                    Scan</label>
+                                                                <input type="time" class="form-control"
+                                                                       id="{{ shift_name }}_terlambat"
+                                                                       name="jam_terlambat_selesai"
+                                                                       value="{{ setting.jam_terlambat_selesai.strftime('%H:%M') if setting and setting.jam_terlambat_selesai else '' }}">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-2 pt-3">
+                                                        <h6 class="text-success fw-bold mb-3"><i
+                                                                class="bi bi-house-door-fill me-2"></i>Waktu Pulang</h6>
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="{{ shift_name }}_pulang_mulai"
+                                                                       class="form-label small fw-semibold">Mulai</label>
+                                                                <input type="time" id="{{ shift_name }}_pulang_mulai"
+                                                                       name="jam_pulang_mulai" class="form-control"
+                                                                       value="{{ setting.jam_pulang_mulai.strftime('%H:%M') if setting and setting.jam_pulang_mulai else '' }}"
+                                                                       required>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label for="{{ shift_name }}_pulang_selesai"
+                                                                       class="form-label small fw-semibold">Akhir</label>
+                                                                <input type="time" id="{{ shift_name }}_pulang_selesai"
+                                                                       name="jam_pulang_selesai" class="form-control"
+                                                                       value="{{ setting.jam_pulang_selesai.strftime('%H:%M') if setting and setting.jam_pulang_selesai else '' }}"
+                                                                       required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between pt-3 border-top mt-3">
+                                                    <button type="submit" name="action" value="reset"
+                                                            class="btn btn-outline-danger"
+                                                            formaction="{{ url_for('pengaturan_pegawai') }}"
+                                                            {% if not setting or not setting.id %}disabled{% endif %}
+                                                            onclick="return confirm('Yakin ingin mereset waktu {{ shift_name.capitalize().replace('shift', 'Shift ') }}?');">
+                                                        Reset
+                                                    </button>
+                                                    <button type="submit" class="btn btn-success px-5">Simpan</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const btnReset = document.getElementById("btnResetSiswa");
-  if (!btnReset) return;
-  const apiUrl = btnReset.dataset.apiUrl;
-  btnReset.addEventListener("click", async function () {
-    if (!confirm("Yakin ingin mereset form ke pengaturan terakhir tersimpan?")) return;
-    try {
-      const resp = await fetch(apiUrl + "?_=" + Date.now(), { method: "GET", headers: { "Accept": "application/json" }, credentials: "same-origin" });
-      if (!resp.ok) throw new Error("Response not OK: " + resp.status);
-      const data = await resp.json();
-      document.getElementById("jam_masuk_mulai_s").value = data.jam_masuk_mulai || "";
-      document.getElementById("jam_masuk_selesai_s").value = data.jam_masuk_selesai || "";
-      document.getElementById("jam_terlambat_selesai_s").value = data.jam_terlambat_selesai || "";
-      document.getElementById("jam_pulang_mulai_s").value = data.jam_pulang_mulai || "";
-      document.getElementById("jam_pulang_selesai_s").value = data.jam_pulang_selesai || "";
-      const modalEl = document.getElementById('aturWaktuSiswaModal');
-      if (modalEl) (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show();
-    } catch (err) {
-      console.error("Reset error:", err);
-      alert("Gagal mengambil pengaturan dari server.");
-    }
-  });
-});
-</script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const btnReset = document.getElementById("btnResetSiswa");
+                if (!btnReset) return;
+                const apiUrl = btnReset.dataset.apiUrl;
+                btnReset.addEventListener("click", async function () {
+                    if (!confirm("Yakin ingin mereset form ke pengaturan terakhir tersimpan?")) return;
+                    try {
+                        const resp = await fetch(apiUrl + "?_=" + Date.now(), {
+                            method: "GET",
+                            headers: {"Accept": "application/json"},
+                            credentials: "same-origin"
+                        });
+                        if (!resp.ok) throw new Error("Response not OK: " + resp.status);
+                        const data = await resp.json();
+                        document.getElementById("jam_masuk_mulai_s").value = data.jam_masuk_mulai || "";
+                        document.getElementById("jam_masuk_selesai_s").value = data.jam_masuk_selesai || "";
+                        document.getElementById("jam_terlambat_selesai_s").value = data.jam_terlambat_selesai || "";
+                        document.getElementById("jam_pulang_mulai_s").value = data.jam_pulang_mulai || "";
+                        document.getElementById("jam_pulang_selesai_s").value = data.jam_pulang_selesai || "";
+                        const modalEl = document.getElementById('aturWaktuSiswaModal');
+                        if (modalEl) (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show();
+                    } catch (err) {
+                        console.error("Reset error:", err);
+                        alert("Gagal mengambil pengaturan dari server.");
+                    }
+                });
+            });
+        </script>
 {% endblock %}

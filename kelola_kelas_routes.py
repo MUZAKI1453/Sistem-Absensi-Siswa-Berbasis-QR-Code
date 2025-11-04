@@ -1,9 +1,11 @@
 from flask import Blueprint, request, redirect, flash, render_template, url_for
+
 from models import Kelas, Siswa, db
 from utils import check_admin_session
 
 # 🟢 Inisialisasi Blueprint dengan prefix URL
 kelola_kelas_bp = Blueprint("kelola_kelas_bp", __name__, url_prefix="/kelola_kelas")
+
 
 # =======================================================================
 #  ROUTE: KELOLA DATA KELAS (CRUD)

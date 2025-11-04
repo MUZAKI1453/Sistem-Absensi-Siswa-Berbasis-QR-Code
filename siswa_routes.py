@@ -1,14 +1,17 @@
 import csv
+import io
 import os
-import io, zipfile
+import zipfile
 from datetime import datetime
 
-from flask import Blueprint, flash, request, render_template, url_for, redirect, send_file, session, current_app
+from flask import Blueprint, flash, request, render_template, url_for, redirect, send_file, current_app
+
 from models import Siswa, Kelas, db
 from utils import create_qr_siswa, check_admin_session
 
 # 🟢 Inisialisasi Blueprint
 siswa_bp = Blueprint("siswa_bp", __name__, url_prefix="/siswa")
+
 
 # =======================================================================
 # ROUTE: KELOLA DATA SISWA (CRUD & Filter)
@@ -169,6 +172,7 @@ def view_qr(nis):
 
     return send_file(img_io, mimetype='image/png')
 
+
 # =======================================================================
 # ROUTE: IMPORT DATA SISWA
 # =======================================================================
@@ -221,6 +225,7 @@ def download_all_qr():
     shutil.rmtree(temp_folder, ignore_errors=True)
 
     return send_file(zip_path, mimetype="application/zip", as_attachment=True, download_name=zip_filename)
+
 
 # =======================================================================
 # ROUTE: IMPORT DATA SISWA

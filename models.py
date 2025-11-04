@@ -1,13 +1,15 @@
 # ======================== DATABASE MODELS ========================
 # Berkas ini mendefinisikan struktur tabel (models) untuk database menggunakan SQLAlchemy.
 
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, time, date
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import UniqueConstraint, ForeignKey, String, Integer, Date, Time
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 # Inisialisasi objek SQLAlchemy
 db = SQLAlchemy()
+
 
 # --- Model untuk data Kelas ---
 class Kelas(db.Model):
@@ -60,7 +62,7 @@ class SettingWaktu(db.Model):
     jam_pulang_mulai: Mapped[time] = mapped_column(Time, nullable=False)
     jam_pulang_selesai: Mapped[time] = mapped_column(Time, nullable=False)
     jam_terlambat_selesai: Mapped[time] = mapped_column(Time, nullable=True)
-    
+
     # ==============================================================================
     #  PENAMBAHAN BARU: Kolom untuk menyimpan hari libur rutin (mingguan)
     # ==============================================================================
@@ -78,10 +80,12 @@ class Pegawai(db.Model):
     shift: Mapped[str] = mapped_column(String(10), nullable=True)
 
     qr_path: Mapped[str] = mapped_column(String(200), nullable=True)
-    
+
     # PERUBAHAN: Menambahkan cascade="all, delete-orphan" untuk menghapus data terkait secara otomatis
-    absensi_list: Mapped[list["AbsensiPegawai"]] = relationship(back_populates="pegawai_relasi", cascade="all, delete-orphan")
-    jadwal_keamanan_list: Mapped[list["JadwalKeamanan"]] = relationship(back_populates="pegawai_relasi", cascade="all, delete-orphan")
+    absensi_list: Mapped[list["AbsensiPegawai"]] = relationship(back_populates="pegawai_relasi",
+                                                                cascade="all, delete-orphan")
+    jadwal_keamanan_list: Mapped[list["JadwalKeamanan"]] = relationship(back_populates="pegawai_relasi",
+                                                                        cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Pegawai {self.nama} (Role: {self.role})>'
@@ -140,6 +144,7 @@ class SettingWaktuKeamanan(db.Model):
     jam_terlambat_selesai: Mapped[time] = mapped_column(Time, nullable=True)
     jam_pulang_mulai: Mapped[time] = mapped_column(Time, nullable=False)
     jam_pulang_selesai: Mapped[time] = mapped_column(Time, nullable=False)
+
 
 # --- Model untuk Hari Libur Spesial ---
 class HariLibur(db.Model):

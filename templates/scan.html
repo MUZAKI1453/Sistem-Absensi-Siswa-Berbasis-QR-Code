@@ -1,115 +1,123 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-    .scan-page-wrapper {
-        margin: -20px; /* Nilai negatif dari padding .content di base.html */
-    }
-    /* Efek mirror untuk kamera depan */
-    div#reader video.mirrored {
-        transform: scaleX(-1);
-    }
-</style>
+    <style>
+        .scan-page-wrapper {
+            margin: -20px; /* Nilai negatif dari padding .content di base.html */
+        }
 
-<div class="scan-page-wrapper">
-    <div class="d-flex align-items-center justify-content-center min-vh-100 p-4">
-        <div class="w-100" style="max-width: 400px;">
-            <div class="card shadow-lg p-4 text-center">
-                <h3 class="card-title text-2xl font-semibold mb-2">Absensi QR</h3>
-                <p class="text-sm text-muted mb-4">
-                    Arahkan kamera ke QR Code siswa atau pegawai.
-                </p>
+        /* Efek mirror untuk kamera depan */
+        div#reader video.mirrored {
+            transform: scaleX(-1);
+        }
+    </style>
 
-                <div id="reader" class="w-100 rounded-lg overflow-hidden mb-4"></div>
+    <div class="scan-page-wrapper">
+        <div class="d-flex align-items-center justify-content-center min-vh-100 p-4">
+            <div class="w-100" style="max-width: 400px;">
+                <div class="card shadow-lg p-4 text-center">
+                    <h3 class="card-title text-2xl font-semibold mb-2">Absensi QR</h3>
+                    <p class="text-sm text-muted mb-4">
+                        Arahkan kamera ke QR Code siswa atau pegawai.
+                    </p>
 
-                <div
-                    id="message-box"
-                    class="d-none min-h-12 w-100 p-3 font-semibold rounded-lg
+                    <div id="reader" class="w-100 rounded-lg overflow-hidden mb-4"></div>
+
+                    <div
+                            id="message-box"
+                            class="d-none min-h-12 w-100 p-3 font-semibold rounded-lg
                            d-flex align-items-center justify-content-center transition-all duration-300">
-                </div>
+                    </div>
 
-                <div id="loading-spinner" class="d-none my-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="sr-only">Loading...</span>
+                    <div id="loading-spinner" class="d-none my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script>
-    // ... (Semua kode JavaScript Anda tetap sama, tidak perlu diubah) ...
-    const messageBox = document.getElementById('message-box');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const readerElement = document.getElementById('reader');
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script>
+        // ... (Semua kode JavaScript Anda tetap sama, tidak perlu diubah) ...
+        const messageBox = document.getElementById('message-box');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const readerElement = document.getElementById('reader');
 
-    const applyMirrorEffect = (videoElement) => {
-        if (!videoElement || !videoElement.srcObject) return;
-        const tracks = videoElement.srcObject.getVideoTracks();
-        if (tracks.length > 0) {
-            const settings = tracks[0].getSettings();
-            if (settings.facingMode === 'user') {
-                videoElement.classList.add('mirrored');
-            } else {
-                videoElement.classList.remove('mirrored');
+        const applyMirrorEffect = (videoElement) => {
+            if (!videoElement || !videoElement.srcObject) return;
+            const tracks = videoElement.srcObject.getVideoTracks();
+            if (tracks.length > 0) {
+                const settings = tracks[0].getSettings();
+                if (settings.facingMode === 'user') {
+                    videoElement.classList.add('mirrored');
+                } else {
+                    videoElement.classList.remove('mirrored');
+                }
+            }
+        };
+
+        const observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                mutation.addedNodes.forEach(node => {
+                    const videoElement = node.querySelector?.('video') || (node.tagName === 'VIDEO' ? node : null);
+                    if (videoElement) {
+                        videoElement.addEventListener('loadedmetadata', () => {
+                            applyMirrorEffect(videoElement);
+                        });
+                    }
+                });
+            }
+        });
+        observer.observe(readerElement, {childList: true, subtree: true});
+
+        function showMessage(type, message) {
+            messageBox.classList.remove('bg-success-subtle', 'text-success', 'bg-danger-subtle', 'text-danger', 'bg-warning-subtle', 'text-warning', 'd-none');
+            const colorClass = type === 'success' ? 'bg-success-subtle text-success' : type === 'danger' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning';
+            messageBox.className = `min-h-12 w-100 p-3 fw-bold rounded-lg d-flex align-items-center justify-content-center ${colorClass}`;
+            messageBox.textContent = message;
+        }
+
+        let html5QrcodeScanner;
+
+        function startScanner() {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", {
+                fps: 10,
+                qrbox: {width: 250, height: 250},
+                rememberLastUsedCamera: true
+            }, false);
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        async function onScanSuccess(decodedText) {
+            html5QrcodeScanner.clear();
+            messageBox.classList.add('d-none');
+            loadingSpinner.classList.remove('d-none');
+            try {
+                const res = await fetch("/scan/submit_scan", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                    body: `identifier=${encodeURIComponent(decodedText)}`
+                });
+                const data = await res.json();
+                showMessage(data.status, data.message);
+            } catch (error) {
+                console.error("Error:", error);
+                showMessage("danger", "Terjadi kesalahan jaringan atau server.");
+            } finally {
+                loadingSpinner.classList.add('d-none');
+                setTimeout(() => {
+                    messageBox.classList.add('d-none');
+                    startScanner();
+                }, 2500);
             }
         }
-    };
 
-    const observer = new MutationObserver((mutationsList) => {
-        for (const mutation of mutationsList) {
-            mutation.addedNodes.forEach(node => {
-                const videoElement = node.querySelector?.('video') || (node.tagName === 'VIDEO' ? node : null);
-                if (videoElement) {
-                    videoElement.addEventListener('loadedmetadata', () => {
-                        applyMirrorEffect(videoElement);
-                    });
-                }
-            });
+        function onScanFailure(error) {
         }
-    });
-    observer.observe(readerElement, { childList: true, subtree: true });
 
-    function showMessage(type, message) {
-        messageBox.classList.remove('bg-success-subtle', 'text-success', 'bg-danger-subtle', 'text-danger', 'bg-warning-subtle', 'text-warning', 'd-none');
-        const colorClass = type === 'success' ? 'bg-success-subtle text-success' : type === 'danger' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning';
-        messageBox.className = `min-h-12 w-100 p-3 fw-bold rounded-lg d-flex align-items-center justify-content-center ${colorClass}`;
-        messageBox.textContent = message;
-    }
-
-    let html5QrcodeScanner;
-    function startScanner() {
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 }, rememberLastUsedCamera: true }, false);
-        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    }
-
-    async function onScanSuccess(decodedText) {
-        html5QrcodeScanner.clear();
-        messageBox.classList.add('d-none');
-        loadingSpinner.classList.remove('d-none');
-        try {
-            const res = await fetch("/scan/submit_scan", {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `identifier=${encodeURIComponent(decodedText)}`
-            });
-            const data = await res.json();
-            showMessage(data.status, data.message);
-        } catch (error) {
-            console.error("Error:", error);
-            showMessage("danger", "Terjadi kesalahan jaringan atau server.");
-        } finally {
-            loadingSpinner.classList.add('d-none');
-            setTimeout(() => {
-                messageBox.classList.add('d-none');
-                startScanner();
-            }, 2500);
-        }
-    }
-
-    function onScanFailure(error) {}
-    startScanner();
-</script>
+        startScanner();
+    </script>
 {% endblock %}

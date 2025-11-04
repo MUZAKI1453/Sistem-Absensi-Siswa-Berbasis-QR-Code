@@ -3,214 +3,219 @@
 
 {% block content %}
 
-<div class="container mb-5">
-    <h3 class="fw-bold mb-4 page-title"><i class="bi bi-file-earmark-arrow-down me-2"></i>Export Laporan Absensi</h3>
+    <div class="container mb-5">
+        <h3 class="fw-bold mb-4 page-title"><i class="bi bi-file-earmark-arrow-down me-2"></i>Export Laporan Absensi
+        </h3>
 
-    <form method="POST" action="{{ url_for('export_bp.export_laporan') }}" class="card p-4 shadow-sm">
+        <form method="POST" action="{{ url_for('export_bp.export_laporan') }}" class="card p-4 shadow-sm">
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">Pilih Jenis Data:</label>
-            <select class="form-select" id="tipe_data" name="tipe_data" required onchange="updateUI()">
-                <option value="siswa" {% if tipe_filter == 'siswa' %}selected{% endif %}>Siswa</option>
-                <option value="pegawai" {% if tipe_filter == 'pegawai' %}selected{% endif %}>Pegawai</option>
-            </select>
-        </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Pilih Jenis Data:</label>
+                <select class="form-select" id="tipe_data" name="tipe_data" required onchange="updateUI()">
+                    <option value="siswa" {% if tipe_filter == 'siswa' %}selected{% endif %}>Siswa</option>
+                    <option value="pegawai" {% if tipe_filter == 'pegawai' %}selected{% endif %}>Pegawai</option>
+                </select>
+            </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">Pilih Jenis Laporan:</label>
-            <select class="form-select" id="jenis_laporan" name="jenis_laporan" required onchange="updateUI()">
-                <option value="harian">Laporan Harian</option>
-                <option value="mingguan">Laporan Mingguan</option>
-                <option value="bulanan">Laporan Bulanan</option>
-                <option value="individu">Laporan Individu</option>
-            </select>
-        </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Pilih Jenis Laporan:</label>
+                <select class="form-select" id="jenis_laporan" name="jenis_laporan" required onchange="updateUI()">
+                    <option value="harian">Laporan Harian</option>
+                    <option value="mingguan">Laporan Mingguan</option>
+                    <option value="bulanan">Laporan Bulanan</option>
+                    <option value="individu">Laporan Individu</option>
+                </select>
+            </div>
 
-        <div class="mb-3" id="filter_kelas_div">
-            <label for="filter_kelas_select" class="form-label fw-bold">Filter Kelas:</label>
-            <select class="form-select" id="filter_kelas_select" name="kelas_id" onchange="filterIndividuList()">
-                <option value="">-- Semua Kelas --</option>
-                {% for kelas in semua_kelas %}
-                <option value="{{ kelas.id }}">{{ kelas.nama }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="mb-3 d-none" id="filter_role_div">
-            <label for="filter_role_select" class="form-label fw-bold">Filter Role:</label>
-            <select class="form-select" id="filter_role_select" name="role_filter" onchange="filterIndividuList()">
-                <option value="">-- Semua Role --</option>
-                <option value="guru">Guru</option>
-                <option value="staf">Staf</option>
-                <option value="keamanan">Keamanan</option>
-            </select>
-        </div>
-
-        <div class="mb-3 d-none" id="individu_div">
-             <div id="individu_siswa_div">
-                <label for="individu_id_siswa" class="form-label fw-bold">Pilih Siswa:</label>
-                <select class="form-select" id="individu_id_siswa" name="individu_id_siswa">
-                    <option value="">-- Pilih Nama Siswa --</option>
-                    {% for siswa in semua_siswa %}
-                    <option value="{{ siswa.nis }}" data-kelas-id="{{ siswa.kelas_id }}">{{ siswa.nama }} (NIS: {{ siswa.nis }})</option>
+            <div class="mb-3" id="filter_kelas_div">
+                <label for="filter_kelas_select" class="form-label fw-bold">Filter Kelas:</label>
+                <select class="form-select" id="filter_kelas_select" name="kelas_id" onchange="filterIndividuList()">
+                    <option value="">-- Semua Kelas --</option>
+                    {% for kelas in semua_kelas %}
+                        <option value="{{ kelas.id }}">{{ kelas.nama }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div id="individu_pegawai_div" class="d-none">
-                <label for="individu_id_pegawai" class="form-label fw-bold">Pilih Pegawai:</label>
-                <select class="form-select" id="individu_id_pegawai" name="individu_id_pegawai">
-                    <option value="">-- Pilih Nama Pegawai --</option>
-                    {% for pegawai in semua_pegawai %}
-                    <option value="{{ pegawai.no_id }}" data-role="{{ pegawai.role }}">{{ pegawai.nama }} (ID: {{ pegawai.no_id }})</option>
-                    {% endfor %}
+            <div class="mb-3 d-none" id="filter_role_div">
+                <label for="filter_role_select" class="form-label fw-bold">Filter Role:</label>
+                <select class="form-select" id="filter_role_select" name="role_filter" onchange="filterIndividuList()">
+                    <option value="">-- Semua Role --</option>
+                    <option value="guru">Guru</option>
+                    <option value="staf">Staf</option>
+                    <option value="keamanan">Keamanan</option>
                 </select>
             </div>
-        </div>
 
-        <div class="mb-3 d-none" id="harian_field">
-            <label class="form-label fw-bold">Tanggal:</label>
-            <input type="date" class="form-control" name="tanggal">
-        </div>
-        <div class="row mb-3 d-none" id="rentang_tanggal_field">
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Dari Tanggal:</label>
-                <input type="date" class="form-control" name="start_date">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Sampai Tanggal:</label>
-                <input type="date" class="form-control" name="end_date">
-            </div>
-        </div>
-        <div class="row mb-3 d-none" id="bulanan_field">
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Bulan:</label>
-                <select class="form-select" name="bulan">
+            <div class="mb-3 d-none" id="individu_div">
+                <div id="individu_siswa_div">
+                    <label for="individu_id_siswa" class="form-label fw-bold">Pilih Siswa:</label>
+                    <select class="form-select" id="individu_id_siswa" name="individu_id_siswa">
+                        <option value="">-- Pilih Nama Siswa --</option>
+                        {% for siswa in semua_siswa %}
+                            <option value="{{ siswa.nis }}" data-kelas-id="{{ siswa.kelas_id }}">{{ siswa.nama }}
+                                (NIS: {{ siswa.nis }})
+                            </option>
+                        {% endfor %}
                     </select>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label fw-bold">Tahun:</label>
-                <select class="form-select" name="tahun">
+                </div>
+                <div id="individu_pegawai_div" class="d-none">
+                    <label for="individu_id_pegawai" class="form-label fw-bold">Pilih Pegawai:</label>
+                    <select class="form-select" id="individu_id_pegawai" name="individu_id_pegawai">
+                        <option value="">-- Pilih Nama Pegawai --</option>
+                        {% for pegawai in semua_pegawai %}
+                            <option value="{{ pegawai.no_id }}" data-role="{{ pegawai.role }}">{{ pegawai.nama }}
+                                (ID: {{ pegawai.no_id }})
+                            </option>
+                        {% endfor %}
                     </select>
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">Format File:</label>
-            <select class="form-select" name="format_file" required>
-                <option value="xlsx">Excel (.xlsx)</option>
-                <option value="csv">CSV (.csv)</option>
-            </select>
-        </div>
+            <div class="mb-3 d-none" id="harian_field">
+                <label class="form-label fw-bold">Tanggal:</label>
+                <input type="date" class="form-control" name="tanggal">
+            </div>
+            <div class="row mb-3 d-none" id="rentang_tanggal_field">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Dari Tanggal:</label>
+                    <input type="date" class="form-control" name="start_date">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Sampai Tanggal:</label>
+                    <input type="date" class="form-control" name="end_date">
+                </div>
+            </div>
+            <div class="row mb-3 d-none" id="bulanan_field">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Bulan:</label>
+                    <select class="form-select" name="bulan">
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Tahun:</label>
+                    <select class="form-select" name="tahun">
+                    </select>
+                </div>
+            </div>
 
-        <button type="submit" class="btn btn-primary mt-3 w-100">Download Laporan</button>
-    </form>
-</div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Format File:</label>
+                <select class="form-select" name="format_file" required>
+                    <option value="xlsx">Excel (.xlsx)</option>
+                    <option value="csv">CSV (.csv)</option>
+                </select>
+            </div>
 
-<script>
-function populateDateSelectors() {
-    const monthSelect = document.querySelector('select[name="bulan"]');
-    const yearSelect = document.querySelector('select[name="tahun"]');
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
+            <button type="submit" class="btn btn-primary mt-3 w-100">Download Laporan</button>
+        </form>
+    </div>
 
-    // Isi pilihan bulan
-    const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    monthSelect.innerHTML = ''; // Kosongkan dulu
-    months.forEach((month, index) => {
-        const option = document.createElement('option');
-        option.value = index + 1;
-        option.textContent = month;
-        if ((index + 1) === currentMonth) {
-            option.selected = true;
+    <script>
+        function populateDateSelectors() {
+            const monthSelect = document.querySelector('select[name="bulan"]');
+            const yearSelect = document.querySelector('select[name="tahun"]');
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+
+            // Isi pilihan bulan
+            const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            monthSelect.innerHTML = ''; // Kosongkan dulu
+            months.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index + 1;
+                option.textContent = month;
+                if ((index + 1) === currentMonth) {
+                    option.selected = true;
+                }
+                monthSelect.appendChild(option);
+            });
+
+            // Isi pilihan tahun
+            yearSelect.innerHTML = ''; // Kosongkan dulu
+            for (let year = 2025; year <= currentYear + 1; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                if (year === currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
         }
-        monthSelect.appendChild(option);
-    });
 
-    // Isi pilihan tahun
-    yearSelect.innerHTML = ''; // Kosongkan dulu
-    for (let year = 2025; year <= currentYear + 1; year++) {
-        const option = document.createElement('option');
-        option.value = year;
-        option.textContent = year;
-        if (year === currentYear) {
-            option.selected = true;
+        function filterIndividuList() {
+            const tipeData = document.getElementById('tipe_data').value;
+
+            if (tipeData === 'siswa') {
+                const kelasId = document.getElementById('filter_kelas_select').value;
+                const siswaSelect = document.getElementById('individu_id_siswa');
+                siswaSelect.value = '';
+
+                for (const option of siswaSelect.options) {
+                    if (option.value === '') continue;
+                    option.style.display = (kelasId === '' || option.dataset.kelasId === kelasId) ? '' : 'none';
+                }
+            } else {
+                const role = document.getElementById('filter_role_select').value;
+                const pegawaiSelect = document.getElementById('individu_id_pegawai');
+                pegawaiSelect.value = '';
+
+                for (const option of pegawaiSelect.options) {
+                    if (option.value === '') continue;
+                    option.style.display = (role === '' || option.dataset.role === role) ? '' : 'none';
+                }
+            }
         }
-        yearSelect.appendChild(option);
-    }
-}
 
-function filterIndividuList() {
-    const tipeData = document.getElementById('tipe_data').value;
-    
-    if (tipeData === 'siswa') {
-        const kelasId = document.getElementById('filter_kelas_select').value;
-        const siswaSelect = document.getElementById('individu_id_siswa');
-        siswaSelect.value = '';
-        
-        for (const option of siswaSelect.options) {
-            if (option.value === '') continue;
-            option.style.display = (kelasId === '' || option.dataset.kelasId === kelasId) ? '' : 'none';
+        function updateUI() {
+            const tipeData = document.getElementById('tipe_data').value;
+            const jenisLaporan = document.getElementById('jenis_laporan').value;
+
+            document.getElementById('filter_kelas_div').classList.add('d-none');
+            document.getElementById('filter_role_div').classList.add('d-none');
+            document.getElementById('individu_div').classList.add('d-none');
+            document.getElementById('individu_siswa_div').classList.add('d-none');
+            document.getElementById('individu_pegawai_div').classList.add('d-none');
+            document.getElementById('harian_field').classList.add('d-none');
+            document.getElementById('rentang_tanggal_field').classList.add('d-none');
+            document.getElementById('bulanan_field').classList.add('d-none');
+
+            if (tipeData === 'siswa') {
+                document.getElementById('filter_kelas_div').classList.remove('d-none');
+            } else {
+                document.getElementById('filter_role_div').classList.remove('d-none');
+            }
+
+            if (jenisLaporan === 'harian') {
+                document.getElementById('harian_field').classList.remove('d-none');
+            } else if (jenisLaporan === 'mingguan') {
+                document.getElementById('rentang_tanggal_field').classList.remove('d-none');
+            } else if (jenisLaporan === 'bulanan' || jenisLaporan === 'individu') {
+                document.getElementById('bulanan_field').classList.remove('d-none');
+            }
+
+            if (jenisLaporan === 'individu') {
+                document.getElementById('individu_div').classList.remove('d-none');
+                if (tipeData === 'siswa') {
+                    document.getElementById('individu_siswa_div').classList.remove('d-none');
+                } else {
+                    document.getElementById('individu_pegawai_div').classList.remove('d-none');
+                }
+                document.getElementById('filter_kelas_select').name = "kelas_id_filter_individu";
+                document.getElementById('filter_role_select').name = "role_filter_individu";
+            } else {
+                document.getElementById('filter_kelas_select').name = "kelas_id";
+                document.getElementById('filter_role_select').name = "role_filter";
+            }
+
+            filterIndividuList();
         }
-    } else {
-        const role = document.getElementById('filter_role_select').value;
-        const pegawaiSelect = document.getElementById('individu_id_pegawai');
-        pegawaiSelect.value = '';
 
-        for (const option of pegawaiSelect.options) {
-            if (option.value === '') continue;
-            option.style.display = (role === '' || option.dataset.role === role) ? '' : 'none';
-        }
-    }
-}
-
-function updateUI() {
-    const tipeData = document.getElementById('tipe_data').value;
-    const jenisLaporan = document.getElementById('jenis_laporan').value;
-
-    document.getElementById('filter_kelas_div').classList.add('d-none');
-    document.getElementById('filter_role_div').classList.add('d-none');
-    document.getElementById('individu_div').classList.add('d-none');
-    document.getElementById('individu_siswa_div').classList.add('d-none');
-    document.getElementById('individu_pegawai_div').classList.add('d-none');
-    document.getElementById('harian_field').classList.add('d-none');
-    document.getElementById('rentang_tanggal_field').classList.add('d-none');
-    document.getElementById('bulanan_field').classList.add('d-none');
-
-    if (tipeData === 'siswa') {
-        document.getElementById('filter_kelas_div').classList.remove('d-none');
-    } else {
-        document.getElementById('filter_role_div').classList.remove('d-none');
-    }
-
-    if (jenisLaporan === 'harian') {
-        document.getElementById('harian_field').classList.remove('d-none');
-    } else if (jenisLaporan === 'mingguan') {
-        document.getElementById('rentang_tanggal_field').classList.remove('d-none');
-    } else if (jenisLaporan === 'bulanan' || jenisLaporan === 'individu') {
-        document.getElementById('bulanan_field').classList.remove('d-none');
-    }
-
-    if (jenisLaporan === 'individu') {
-        document.getElementById('individu_div').classList.remove('d-none');
-        if (tipeData === 'siswa') {
-            document.getElementById('individu_siswa_div').classList.remove('d-none');
-        } else {
-            document.getElementById('individu_pegawai_div').classList.remove('d-none');
-        }
-        document.getElementById('filter_kelas_select').name = "kelas_id_filter_individu";
-        document.getElementById('filter_role_select').name = "role_filter_individu";
-    } else {
-        document.getElementById('filter_kelas_select').name = "kelas_id";
-        document.getElementById('filter_role_select').name = "role_filter";
-    }
-    
-    filterIndividuList();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    populateDateSelectors();
-    updateUI();
-});
-</script>
+        document.addEventListener('DOMContentLoaded', function () {
+            populateDateSelectors();
+            updateUI();
+        });
+    </script>
 
 {% endblock %}

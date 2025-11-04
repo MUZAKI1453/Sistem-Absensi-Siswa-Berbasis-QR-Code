@@ -1,32 +1,26 @@
 import os
-from dotenv import load_dotenv
-import csv, io
-import json
-import calendar as cal
-from datetime import datetime, time, date
+from datetime import datetime
 
+from dotenv import load_dotenv
 from flask import (
     Flask, render_template, request, redirect, url_for, session,
-    send_file, jsonify, send_from_directory, flash, Response
+    jsonify, flash
 )
-from PIL import Image, ImageDraw, ImageFont
-import pandas as pd, qrcode, requests
-from sqlalchemy import and_, select, delete, exc
+from sqlalchemy import exc
 
-from models import (
-    db, Siswa, Absensi, SettingWaktu, Kelas,
-    Pegawai, AbsensiPegawai, SettingWaktuGuruStaf,
-    SettingWaktuKeamanan, JadwalKeamanan, HariLibur
-)
-from export_routes import export_bp
+from absensi_pegawai_routes import absensi_pegawai_bp
 from absensi_routes import absensi_bp, get_badge_color
 from dashboard_routes import dashboard_bp
-from kelola_kelas_routes import kelola_kelas_bp
-from scan_routes import scan_bp
+from export_routes import export_bp
 from jadwal_keamanan_routes import jadwal_keamanan_bp
-from absensi_pegawai_routes import absensi_pegawai_bp
-from siswa_routes import siswa_bp
+from kelola_kelas_routes import kelola_kelas_bp
+from models import (
+    db, SettingWaktu, SettingWaktuGuruStaf,
+    SettingWaktuKeamanan, HariLibur
+)
 from pegawai_routes import pegawai_bp
+from scan_routes import scan_bp
+from siswa_routes import siswa_bp
 
 # =======================================================================
 #  INISIALISASI APLIKASI FLASK

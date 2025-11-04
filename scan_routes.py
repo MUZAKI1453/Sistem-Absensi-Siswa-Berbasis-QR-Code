@@ -1,15 +1,18 @@
 import calendar
 from datetime import datetime, timedelta
+
+import requests
 from flask import render_template, jsonify, Blueprint, request
+
 from models import (
     Siswa, SettingWaktu, Absensi, Pegawai,
     AbsensiPegawai, SettingWaktuGuruStaf,
     SettingWaktuKeamanan, db, JadwalKeamanan, HariLibur
 )
 from utils import format_nomor_hp
-import requests
 
 scan_bp = Blueprint("scan_bp", __name__, url_prefix="/scan")
+
 
 # =======================================================================
 #  ROUTE: HALAMAN SCAN QR
@@ -30,7 +33,7 @@ def submit_scan():
 
     if not qr_data:
         return jsonify({'status': 'danger', 'message': 'Data QR tidak ditemukan.'})
-    
+
     now = datetime.now()
     hari_ini = now.date()
     nama_hari_en = calendar.day_name[hari_ini.weekday()]
@@ -99,7 +102,7 @@ def submit_scan():
 
         if role in ('guru', 'staf'):
             # --- CEK HARI LIBUR (KHUSUS GURU & STAF) ---
-            setting_waktu = SettingWaktu.query.first() # Menggunakan setting waktu siswa untuk hari libur
+            setting_waktu = SettingWaktu.query.first()  # Menggunakan setting waktu siswa untuk hari libur
             if setting_waktu and setting_waktu.hari_libur_rutin:
                 libur_rutin = setting_waktu.hari_libur_rutin.split(',')
                 if nama_hari_id in libur_rutin:
@@ -114,9 +117,9 @@ def submit_scan():
                     'status': 'warning',
                     'message': f"Hari ini libur: {libur_spesial.keterangan}. Absensi tidak dicatat."
                 })
-            
+
             setting = SettingWaktuGuruStaf.query.first()
-        
+
         elif role == 'keamanan':
             # --- UNTUK KEAMANAN, TIDAK ADA CEK HARI LIBUR GLOBAL ---
             # Logika libur mereka hanya berdasarkan jadwal shift 'Off'
@@ -125,7 +128,8 @@ def submit_scan():
                 shift = jadwal_hari_ini.shift
                 setting = SettingWaktuKeamanan.query.filter_by(nama_shift=shift).first()
             else:
-                return jsonify({'status': 'danger', 'message': 'Jadwal keamanan untuk hari ini tidak ditemukan atau Anda sedang libur (shift Off).'})
+                return jsonify({'status': 'danger',
+                                'message': 'Jadwal keamanan untuk hari ini tidak ditemukan atau Anda sedang libur (shift Off).'})
         else:
             return jsonify({'status': 'danger', 'message': f'Role {role} tidak dikenali.'})
 
@@ -205,7 +209,8 @@ def submit_scan():
             if response.status_code == 200:
                 return jsonify({'status': 'success', 'message': f"Absen {jenis_absen} berhasil & WA terkirim."})
             else:
-                return jsonify({'status': 'warning', 'message': f"Absen berhasil tapi WA gagal. ({response.status_code})"})
+                return jsonify(
+                    {'status': 'warning', 'message': f"Absen berhasil tapi WA gagal. ({response.status_code})"})
 
         except Exception as e:
             print("WA Error:", e)

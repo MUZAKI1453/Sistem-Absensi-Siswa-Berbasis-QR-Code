@@ -1,13 +1,16 @@
 import csv
-import io, zipfile
+import io
 import os
+import zipfile
 from datetime import datetime
 
 from flask import Blueprint, request, flash, render_template, redirect, url_for, send_file, current_app
+
 from models import Pegawai, db
 from utils import check_admin_session, create_qr_pegawai
 
 pegawai_bp = Blueprint("pegawai_bp", __name__, url_prefix="/pegawai")
+
 
 # =======================================================================
 # ROUTE: KELOLA DATA PEGAWAI
@@ -119,6 +122,7 @@ def download_qr_pegawai(no_id):
 
     filename = f"{pegawai_data.nama}_{pegawai_data.no_id}.png"
     return send_file(img_io, mimetype='image/png', as_attachment=True, download_name=filename)
+
 
 # =======================================================================
 # ROUTE: DOWNLOAD SEMUA QR CODE PEGAWAI (ZIP PER ROLE)
