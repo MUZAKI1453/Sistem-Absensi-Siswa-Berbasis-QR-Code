@@ -18,6 +18,7 @@ from models import (
     db, SettingWaktu, SettingWaktuGuruStaf,
     SettingWaktuKeamanan, HariLibur
 )
+from notifikasi_terlambat import start_scheduler
 from pegawai_routes import pegawai_bp
 from scan_routes import scan_bp
 from siswa_routes import siswa_bp
@@ -352,4 +353,6 @@ def pengaturan_pegawai():
 #  MAIN EXECUTION
 # =======================================================================
 if __name__ == "__main__":
+    with app.app_context():
+        start_scheduler(app)
     app.run(debug=False, host="0.0.0.0", port=8080)

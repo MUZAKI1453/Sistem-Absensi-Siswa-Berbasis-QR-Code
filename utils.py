@@ -2,6 +2,9 @@ import qrcode
 from PIL import Image, ImageDraw, ImageFont
 from flask import session, redirect, url_for, flash
 
+import requests
+from datetime import date
+from models import db, Siswa, Absensi, HariLibur
 
 def check_admin_session():
     """Periksa apakah admin sudah login."""
@@ -98,3 +101,60 @@ def create_qr_pegawai(no_id, nama, role):
         current_y += font.getbbox(line)[3] - font.getbbox(line)[1] + line_spacing
 
     return new_img
+
+
+# Token Fonnte WA Gateway
+FONNTE_TOKEN = "m7sWNBLHrGi2AHZNj2x3"  # ganti dengan token kamu
+
+
+def kirim_pesan_wa(target, message):
+    """Mengirim pesan WhatsApp menggunakan Fonnte API."""
+    try:
+        response = requests.post(
+            "https://api.fonnte.com/send",
+            headers={"Authorization": FONNTE_TOKEN},
+            data={"target": target, "message": message}
+        )
+        if response.status_code == 200:
+            print(f"✅ Pesan WA terkirim ke {target}")
+        else:
+            print(f"⚠️ Gagal kirim WA ke {target}: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"❌ Error kirim WA ke {target}: {e}")
+
+
+def kirim_notifikasi_terlambat(app):
+    """Kirim WA ke orang tua siswa yang belum absen setelah waktu terlambat selesai."""
+    with app.app_context():
+        print("🚀 Mengecek siswa yang belum absen...")
+
+        today = date.today()
+
+        # Cek hari libur
+        libur = HariLibur.query.filter_by(tanggal=today).first()
+        if libur:
+            print(f"⛱️ Hari ini libur: {libur.keterangan}")
+            return
+
+        siswa_list = Siswa.query.all()
+        absen_hari_ini = [a.nis for a in Absensi.query.filter_by(tanggal=today).all()]
+        belum_absen = [s for s in siswa_list if s.nis not in absen_hari_ini]
+
+        if not belum_absen:
+            print("✅ Semua siswa sudah absen hari ini.")
+            return
+
+        for s in belum_absen:
+            if s.no_hp_ortu:
+                nomor = format_nomor_hp(s.no_hp_ortu)
+                pesan = (
+                    f"📚 *Notifikasi Absensi Sekolah*\n\n"
+                    f"Halo, orang tua dari *{s.nama}*.\n\n"
+                    f"Hingga batas waktu absensi berakhir hari ini ({today}), "
+                    "putra/putri Anda *belum tercatat melakukan absensi* di sekolah.\n\n"
+                    "Mohon konfirmasi kehadiran atau hubungi pihak sekolah. Terima kasih 🙏"
+                )
+                kirim_pesan_wa(nomor, pesan)
+                print(f"📨 WA dikirim ke orang tua {s.nama} ({nomor})")
+
+        print("✅ Semua notifikasi terlambat sudah dikirim.")
