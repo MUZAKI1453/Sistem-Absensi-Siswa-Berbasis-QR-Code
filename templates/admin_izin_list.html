@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Verifikasi Izin & Sakit Siswa{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Judul Halaman -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="fw-bold mb-0 text-primary">
+            <i class="bi bi-clipboard2-check me-2"></i>Verifikasi Izin & Sakit Siswa
+        </h3>
+    </div>
+
+    <!-- Filter tanggal -->
+    <form method="get" class="mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label for="tanggal" class="form-label fw-semibold">Pilih Tanggal:</label>
+                <input type="date" id="tanggal" name="tanggal" class="form-control"
+                       value="{{ tanggal_dipilih }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-dark">
+                    <i class="bi bi-search"></i> Tampilkan
+                </button>
+                <a href="{{ url_for('izin_admin_bp.daftar_izin') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-repeat"></i> Reset
+                </a>
+            </div>
+        </div>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Kartu tabel -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Daftar Pengajuan Izin / Sakit</h5>
+            {% if data|length > 0 %}
+                <span class="badge bg-light text-dark">{{ data|length }} Pengajuan</span>
+            {% endif %}
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="bg-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Nama Siswa</th>
+                            <th>Kelas</th>
+                            <th>Jenis</th>
+                            <th>Nama Orang Tua</th>
+                            <th>Status</th>
+                            <th>Berkas</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in data %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ i.tanggal.strftime('%d-%m-%Y') }}</td>
+                            <td>{{ i.nama_siswa }}</td>
+                            <td>{{ i.kelas }}</td>
+                            <td>{{ i.jenis_izin }}</td>
+                            <td>{{ i.nama_ortu }}</td>
+                            <td>
+                                {% if i.status == 'Disetujui' %}
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Disetujui</span>
+                                {% elif i.status == 'Ditolak' %}
+                                    <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Ditolak</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Menunggu</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if i.file_surat %}
+                                    <a href="{{ url_for('static', filename='uploads/' + i.file_surat) }}"
+                                       target="_blank"
+                                       class="btn btn-outline-primary btn-sm mb-1">
+                                        <i class="bi bi-file-earmark-text"></i> Surat
+                                    </a><br>
+                                {% endif %}
+                                {% if i.file_foto %}
+                                    <a href="{{ url_for('static', filename='uploads/' + i.file_foto) }}"
+                                       target="_blank"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-image"></i> Foto
+                                    </a>
+                                {% endif %}
+                            </td>
+                            <td class="text-nowrap">
+                                {% if i.status in ['Menunggu Persetujuan', 'Menunggu'] %}
+                                    <a href="{{ url_for('izin_admin_bp.setujui_izin', id=i.id) }}"
+                                       class="btn btn-success btn-sm me-1">
+                                        <i class="bi bi-check-circle"></i> Setujui
+                                    </a>
+                                    <a href="{{ url_for('izin_admin_bp.tolak_izin', id=i.id) }}"
+                                       class="btn btn-danger btn-sm"
+                                       onclick="return confirm('Apakah Anda yakin ingin menolak izin ini?')">
+                                        <i class="bi bi-x-circle"></i> Tolak
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted"><em>Tidak ada aksi</em></span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-3">
+                                Belum ada pengajuan izin atau sakit untuk tanggal ini.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -156,3 +156,20 @@ class HariLibur(db.Model):
 
     def __repr__(self):
         return f'<HariLibur {self.tanggal.strftime("%Y-%m-%d")}: {self.keterangan}>'
+
+
+
+class IzinSiswa(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nama_ortu = db.Column(db.String(100), nullable=False)
+    no_wa = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100))
+    nama_siswa = db.Column(db.String(100), nullable=False)
+    kelas = db.Column(db.String(50))
+    wali_kelas = db.Column(db.String(100))
+    jenis_izin = db.Column(db.String(20), nullable=False)  # 'Sakit' atau 'Izin'
+    keterangan = db.Column(db.Text)
+    file_surat = db.Column(db.String(255))
+    file_foto = db.Column(db.String(255))
+    tanggal = db.Column(db.Date, default=datetime.now().date)
+    status = db.Column(db.String(20), default="Menunggu Persetujuan")  # 'Menunggu', 'Disetujui', 'Ditolak'

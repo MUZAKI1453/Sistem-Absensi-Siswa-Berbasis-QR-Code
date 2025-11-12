@@ -311,6 +311,10 @@
                href="{{ url_for('kelola_kelas_bp.kelola_kelas') }}">
                 <i class="bi bi-book"></i><span>Kelola Kelas</span>
             </a>
+            <a class="nav-link {% if '/admin/izin' in request.path %}active{% endif %}"
+               href="{{ url_for('izin_admin_bp.daftar_izin') }}">
+                <i class="bi bi-clipboard-check"></i><span>Verifikasi Izin & Sakit</span>
+            </a>
             <a class="nav-link {% if 'jadwal_keamanan' in request.path %}active{% endif %}"
                href="{{ url_for('jadwal_keamanan_bp.jadwal_keamanan') }}">
                 <i class="bi bi-calendar-range"></i><span>Jadwal Keamanan</span>

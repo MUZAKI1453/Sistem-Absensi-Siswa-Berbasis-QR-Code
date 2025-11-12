@@ -144,6 +144,8 @@ def kirim_notifikasi_terlambat(app):
             print("✅ Semua siswa sudah absen hari ini.")
             return
 
+        link_izin = "http://127.0.0.1:8080/izin/"
+
         for s in belum_absen:
             if s.no_hp_ortu:
                 nomor = format_nomor_hp(s.no_hp_ortu)
@@ -152,7 +154,10 @@ def kirim_notifikasi_terlambat(app):
                     f"Halo, orang tua dari *{s.nama}*.\n\n"
                     f"Hingga batas waktu absensi berakhir hari ini ({today}), "
                     "putra/putri Anda *belum tercatat melakukan absensi* di sekolah.\n\n"
-                    "Mohon konfirmasi kehadiran atau hubungi pihak sekolah. Terima kasih 🙏"
+                    "Mohon konfirmasi kehadiran Jika anak Anda sedang sakit atau izin, "
+                    "silakan ajukan keterangan melalui tautan berikut:\n"
+                    f"{link_izin}\n\n"
+                    "Terima kasih 🙏"
                 )
                 kirim_pesan_wa(nomor, pesan)
                 print(f"📨 WA dikirim ke orang tua {s.nama} ({nomor})")

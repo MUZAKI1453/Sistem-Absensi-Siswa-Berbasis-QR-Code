@@ -1,27 +1,27 @@
 import os
 from datetime import datetime
-
+from sqlalchemy import exc
 from dotenv import load_dotenv
 from flask import (
     Flask, render_template, request, redirect, url_for, session,
     jsonify, flash
 )
-from sqlalchemy import exc
-
+from models import (
+    db, SettingWaktu, SettingWaktuGuruStaf,
+    SettingWaktuKeamanan, HariLibur
+)
 from absensi_pegawai_routes import absensi_pegawai_bp
 from absensi_routes import absensi_bp, get_badge_color
 from dashboard_routes import dashboard_bp
 from export_routes import export_bp
 from jadwal_keamanan_routes import jadwal_keamanan_bp
 from kelola_kelas_routes import kelola_kelas_bp
-from models import (
-    db, SettingWaktu, SettingWaktuGuruStaf,
-    SettingWaktuKeamanan, HariLibur
-)
 from notifikasi_terlambat import start_scheduler
 from pegawai_routes import pegawai_bp
 from scan_routes import scan_bp
 from siswa_routes import siswa_bp
+from izin_routes import izin_bp
+from izin_admin_routes import izin_admin_bp
 
 # =======================================================================
 #  INISIALISASI APLIKASI FLASK
@@ -68,6 +68,9 @@ app.register_blueprint(jadwal_keamanan_bp)
 app.register_blueprint(absensi_pegawai_bp)
 app.register_blueprint(siswa_bp)
 app.register_blueprint(pegawai_bp)
+app.register_blueprint(izin_bp)
+app.register_blueprint(izin_admin_bp)
+
 
 
 # =======================================================================
