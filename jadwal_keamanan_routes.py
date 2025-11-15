@@ -1,5 +1,7 @@
 import calendar as cal
 from datetime import datetime, date
+import io
+import csv
 
 from flask import (
     Blueprint, Response, render_template, flash, redirect,
@@ -10,12 +12,13 @@ from sqlalchemy import select, delete
 from models import JadwalKeamanan, Pegawai, db
 from utils import check_admin_session
 
-# 🟢 Inisialisasi Blueprint
+# Inisialisasi Blueprint
 jadwal_keamanan_bp = Blueprint("jadwal_keamanan_bp", __name__, url_prefix="/jadwal_keamanan")
 
 
 # ==============================================================================
 # HALAMAN UTAMA JADWAL KEAMANAN
+# (Tidak ada perubahan)
 # ==============================================================================
 @jadwal_keamanan_bp.route("/", methods=["GET"])
 def jadwal_keamanan():
@@ -38,12 +41,10 @@ def jadwal_keamanan():
     current_date = datetime(current_year, current_month, 1)
     days_in_month = cal.monthrange(current_year, current_month)[1]
 
-    # Ambil data pegawai keamanan
     security_staff = get_security_staff()
     if isinstance(security_staff, Response):
         return security_staff
 
-    # Ambil jadwal bulan ini
     staff_schedules = get_monthly_schedule(current_month, current_year)
     if isinstance(staff_schedules, Response):
         return staff_schedules
@@ -63,6 +64,7 @@ def jadwal_keamanan():
 
 # ==============================================================================
 # SIMPAN JADWAL KEAMANAN
+# (Tidak ada perubahan)
 # ==============================================================================
 @jadwal_keamanan_bp.route("/simpan", methods=["POST"])
 def simpan_jadwal_keamanan():
@@ -94,6 +96,7 @@ def simpan_jadwal_keamanan():
 
 # ==============================================================================
 # COPY JADWAL BULAN SEBELUMNYA
+# (Tidak ada perubahan)
 # ==============================================================================
 @jadwal_keamanan_bp.route("/copy-previous", methods=["POST"])
 def copy_previous_schedule():
@@ -162,7 +165,8 @@ def copy_previous_schedule():
 
 
 # ==============================================================================
-# UTILITAS INTERNAL (PENGGANTI security_utils)
+# UTILITAS INTERNAL
+# (Tidak ada perubahan)
 # ==============================================================================
 
 def get_security_staff():
@@ -263,3 +267,110 @@ def save_monthly_schedule(month, year, form_data):
         db.session.rollback()
         current_app.logger.error(f"Error saving schedule: {e}")
         return False
+
+
+# ==============================================================================
+# ROUTE BARU (DIPERBARUI): IMPOR JADWAL KEAMANAN DARI CSV
+# ==============================================================================
+@jadwal_keamanan_bp.route("/impor", methods=["POST"])
+def impor_jadwal_keamanan():
+    """Impor jadwal keamanan dari file CSV."""
+    auth_check = check_admin_session()
+    if auth_check:
+        return auth_check
+
+    # 1. Validasi Input Form
+    if "csv_file" not in request.files:
+        flash("File CSV tidak ditemukan.", "danger")
+        return redirect(url_for("jadwal_keamanan_bp.jadwal_keamanan"))
+
+    file = request.files["csv_file"]
+    if file.filename == "" or not file.filename.endswith(".csv"):
+        flash("Nama file tidak valid atau bukan format .csv", "danger")
+        return redirect(url_for("jadwal_keamanan_bp.jadwal_keamanan"))
+
+    try:
+        # Ambil bulan dan tahun dari form modal
+        bulan_impor = int(request.form.get("import_bulan"))
+        tahun_impor = int(request.form.get("import_tahun"))
+        if not (1 <= bulan_impor <= 12):
+            raise ValueError("Bulan tidak valid")
+    except (ValueError, TypeError):
+        flash("Bulan atau Tahun impor tidak valid.", "danger")
+        return redirect(url_for("jadwal_keamanan_bp.jadwal_keamanan"))
+
+    # 2. Proses File CSV
+    try:
+        stream = io.StringIO(file.stream.read().decode("utf-8"))
+        csv_input = csv.DictReader(stream)
+
+        count_jadwal_baru = 0
+        pegawai_diproses = set()
+
+        # Tentukan tanggal awal dan akhir untuk menghapus data lama
+        start_date = date(tahun_impor, bulan_impor, 1)
+        days_in_month = cal.monthrange(tahun_impor, bulan_impor)[1]
+        end_date = date(tahun_impor, bulan_impor, days_in_month)
+
+        for row in csv_input:
+            no_id = row.get("No_id") or row.get("no_id")
+
+            if not no_id:
+                flash(f"Baris data tidak valid (No_id kosong), dilewati.", "warning")
+                continue
+
+            # 3. Validasi Data per Baris
+            pegawai = Pegawai.query.filter_by(no_id=no_id).first()
+            if not pegawai:
+                flash(f"Pegawai dengan No ID '{no_id}' (dari file CSV) tidak ditemukan, dilewati.", "warning")
+                continue
+
+            # 4. Hapus Jadwal Lama (PENTING!)
+            if pegawai.id not in pegawai_diproses:
+                try:
+                    # Hapus semua jadwal di bulan & tahun itu untuk pegawai ini
+                    db.session.execute(
+                        delete(JadwalKeamanan).filter(
+                            JadwalKeamanan.pegawai_id == pegawai.id,
+                            JadwalKeamanan.tanggal.between(start_date, end_date)
+                        )
+                    )
+                    pegawai_diproses.add(pegawai.id)
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f"Gagal menghapus jadwal lama untuk {no_id}: {e}", "danger")
+                    continue
+
+            # 5. Loop dan Tambah Jadwal Baru
+            for i in range(1, days_in_month + 1): # Hanya loop sampai hari terakhir di bulan
+                col_name = f"shift_tgl{i}"
+                shift_value = row.get(col_name)
+
+                # Jika kolom shift ada isinya (tidak kosong)
+                if shift_value and shift_value.strip() != "":
+                    try:
+                        tgl_obj = date(tahun_impor, bulan_impor, i)
+                        
+                        jadwal_baru = JadwalKeamanan(
+                            pegawai_id=pegawai.id,
+                            tanggal=tgl_obj,
+                            shift=shift_value.strip()
+                        )
+                        db.session.add(jadwal_baru)
+                        count_jadwal_baru += 1
+
+                    except ValueError:
+                        # Seharusnya tidak terjadi karena sudah dibatasi days_in_month
+                        continue 
+
+        # 6. Commit ke Database
+        db.session.commit()
+        flash(f"Impor jadwal berhasil. {count_jadwal_baru} entri jadwal baru ditambahkan/diperbarui.", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error saat impor CSV jadwal: {e}")
+        flash(f"Terjadi kesalahan besar saat memproses file: {e}", "danger")
+
+    # Redirect kembali ke halaman yang menampilkan bulan dan tahun yang baru diimpor
+    return redirect(url_for("jadwal_keamanan_bp.jadwal_keamanan", month=bulan_impor, year=tahun_impor))

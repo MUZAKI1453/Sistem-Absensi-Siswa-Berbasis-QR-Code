@@ -5,7 +5,8 @@
 
     <div class="container-fluid">
         <h3 class="fw-bold mb-4 page-title"><i class="bi bi-calendar2-week me-2"></i>Jadwal Keamanan Bulanan</h3>
-        <div class="d-flex align-items-center justify-content-between mb-3">
+        
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
             <form method="GET" action="{{ url_for('jadwal_keamanan_bp.jadwal_keamanan') }}"
                   class="d-flex align-items-center">
                 <input type="hidden" name="year" value="{{ current_year }}">
@@ -24,7 +25,7 @@
                 </button>
             </form>
 
-            <div>
+            <div class="d-flex gap-2">
                 <form method="POST" action="{{ url_for('jadwal_keamanan_bp.copy_previous_schedule') }}"
                       class="d-inline">
                     <input type="hidden" name="current_month" value="{{ current_month }}">
@@ -33,10 +34,14 @@
                         <i class="bi bi-copy me-1"></i> Salin dari Bulan Sebelumnya
                     </button>
                 </form>
+                
+                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#importJadwalModal">
+                    <i class="bi bi-file-earmark-arrow-up me-1"></i> Impor Jadwal (CSV)
+                </button>
             </div>
         </div>
 
-        <!-- Form Jadwal -->
         <form method="POST" action="{{ url_for('jadwal_keamanan_bp.simpan_jadwal_keamanan') }}">
             <input type="hidden" name="month" value="{{ current_month }}">
             <input type="hidden" name="year" value="{{ current_year }}">
@@ -93,24 +98,97 @@
         </form>
     </div>
 
+    <div class="modal fade" id="importJadwalModal" tabindex="-1" aria-labelledby="importJadwalModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importJadwalModalLabel"><i class="bi bi-file-earmark-arrow-up me-2"></i>Impor Jadwal Keamanan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('jadwal_keamanan_bp.impor_jadwal_keamanan') }}" method="POST" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        
+                        <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading fw-bold">Petunjuk Format CSV</h6>
+                            <p class="small">Pastikan file CSV Anda memiliki kolom-kolom berikut (sesuai urutan):</p>
+                            <pre class="small bg-white p-2 rounded"><code>No_id,nama,shift_tgl1,shift_tgl2,...,shift_tgl31</code></pre>
+                            <hr>
+                            <ul class="small mb-0">
+                                <li>Kolom `No_id` harus sesuai dengan database.</li>
+                                <li>Kolom `nama` hanya untuk referensi Anda.</li>
+                                <li>Pilih Bulan dan Tahun di bawah ini.</li>
+                            </ul>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="import_bulan" class="form-label fw-bold">Bulan Impor</label>
+                                <select class="form-select" id="import_bulan" name="import_bulan" required>
+                                    </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="import_tahun" class="form-label fw-bold">Tahun Impor</label>
+                                <input type="number" class="form-control" id="import_tahun" name="import_tahun" 
+                                       value="{{ current_year }}" placeholder="Contoh: 2025" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label fw-bold">Pilih File CSV</label>
+                            <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-upload me-1"></i> Upload dan Impor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <style>
+        /* CSS tidak berubah */
         h4 {
             font-weight: 600;
         }
-
         table {
             font-size: 0.85rem;
         }
-
         select.form-select-sm {
             min-width: 70px;
             padding: 0.2rem 0.4rem;
         }
-
         .table th, .table td {
             vertical-align: middle;
             text-align: center;
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthSelect = document.getElementById('import_bulan');
+            if (monthSelect) {
+                const months = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                ];
+                
+                const currentMonthOnPage = parseInt("{{ current_month }}"); 
+                
+                months.forEach((month, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = month;
+                    // Pilih bulan yang sama dengan yang ditampilkan di halaman
+                    if ((index + 1) === currentMonthOnPage) {
+                        option.selected = true;
+                    }
+                    monthSelect.appendChild(option);
+                });
+            }
+        });
+    </script>
 
 {% endblock %}
