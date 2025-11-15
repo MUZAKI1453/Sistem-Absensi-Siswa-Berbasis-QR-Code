@@ -323,8 +323,9 @@
                href="{{ url_for('export_bp.export_laporan') }}">
                 <i class="bi bi-file-earmark-arrow-down"></i><span>Export Laporan</span>
             </a>
+            
             <a class="nav-link {% if 'atur_waktu' in request.path or 'pengaturan' in request.path %}active{% endif %}"
-               href="{{ url_for('pengaturan') }}">
+               href="{{ url_for('pengaturan_bp.pengaturan') }}">
                 <i class="bi bi-gear"></i><span>Pengaturan</span>
             </a>
         </nav>

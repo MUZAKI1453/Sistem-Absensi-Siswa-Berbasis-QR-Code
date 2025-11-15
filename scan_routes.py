@@ -44,7 +44,7 @@ def submit_scan():
     nama_hari_id = daftar_hari_id.get(nama_hari_en, nama_hari_en)
 
     # =======================================================================
-    #  PERUBAHAN 1: PARSE QR CODE DILAKUKAN DI AWAL
+    #  PARSE QR CODE DILAKUKAN DI AWAL
     # =======================================================================
     qr_data = qr_data.strip().lower()
     if len(qr_data) < 2:
@@ -65,13 +65,13 @@ def submit_scan():
     # ====================== SISWA ======================
     if prefix == 's':
         # --- CEK HARI LIBUR (KHUSUS SISWA) ---
-        setting_waktu = SettingWaktu.query.first()
-        if setting_waktu and setting_waktu.hari_libur_rutin:
-            libur_rutin = setting_waktu.hari_libur_rutin.split(',')
+        setting_waktu_siswa = SettingWaktu.query.first() # Menggunakan variabel spesifik
+        if setting_waktu_siswa and setting_waktu_siswa.hari_libur_rutin:
+            libur_rutin = setting_waktu_siswa.hari_libur_rutin.split(',')
             if nama_hari_id in libur_rutin:
                 return jsonify({
                     'status': 'warning',
-                    'message': f"Hari {nama_hari_id} adalah hari libur rutin. Absensi tidak dicatat."
+                    'message': f"Hari {nama_hari_id} adalah hari libur rutin Siswa. Absensi tidak dicatat."
                 })
 
         libur_spesial = HariLibur.query.filter_by(tanggal=hari_ini).first()
@@ -87,7 +87,7 @@ def submit_scan():
 
         model = Absensi
         field = "nis"
-        setting = SettingWaktu.query.first()
+        setting = setting_waktu_siswa # Gunakan setting yang sudah diambil
         send_wa = True
 
     # ====================== PEGAWAI ======================
@@ -101,28 +101,40 @@ def submit_scan():
         role = entity.role
 
         if role in ('guru', 'staf'):
-            # --- CEK HARI LIBUR (KHUSUS GURU & STAF) ---
-            setting_waktu = SettingWaktu.query.first()  # Menggunakan setting waktu siswa untuk hari libur
-            if setting_waktu and setting_waktu.hari_libur_rutin:
-                libur_rutin = setting_waktu.hari_libur_rutin.split(',')
-                if nama_hari_id in libur_rutin:
+            
+            setting_guru_staf = SettingWaktuGuruStaf.query.first()
+
+            # ==============================================================================
+            #  PERBAIKAN ERROR (LOGIC CHECK):
+            #  Tambahkan pengecekan 'None' di sini agar tidak error di bawah
+            # ==============================================================================
+            if not setting_guru_staf:
+                return jsonify({'status': 'danger', 'message': 'Pengaturan waktu Guru/Staf belum diatur oleh admin.'})
+            # ==============================================================================
+            
+            # 1. Cek Libur Rutin Guru/Staf (dari setting_waktu_guru_staf)
+            if setting_guru_staf.hari_libur_rutin:
+                libur_rutin_pegawai = setting_guru_staf.hari_libur_rutin.split(',')
+                if nama_hari_id in libur_rutin_pegawai:
                     return jsonify({
                         'status': 'warning',
-                        'message': f"Hari {nama_hari_id} adalah hari libur rutin. Absensi tidak dicatat."
+                        'message': f"Hari {nama_hari_id} adalah hari libur rutin Pegawai. Absensi tidak dicatat."
                     })
 
+            # 2. Cek Libur Spesial (Tanggal Merah)
             libur_spesial = HariLibur.query.filter_by(tanggal=hari_ini).first()
             if libur_spesial:
                 return jsonify({
                     'status': 'warning',
                     'message': f"Hari ini libur: {libur_spesial.keterangan}. Absensi tidak dicatat."
                 })
+            
+            # 3. Tetapkan setting jam kerja
+            setting = setting_guru_staf
 
-            setting = SettingWaktuGuruStaf.query.first()
 
         elif role == 'keamanan':
-            # --- UNTUK KEAMANAN, TIDAK ADA CEK HARI LIBUR GLOBAL ---
-            # Logika libur mereka hanya berdasarkan jadwal shift 'Off'
+            # (Logika keamanan tidak berubah)
             jadwal_hari_ini = JadwalKeamanan.query.filter_by(pegawai_id=entity.id, tanggal=hari_ini).first()
             if jadwal_hari_ini and jadwal_hari_ini.shift not in ['Off', '']:
                 shift = jadwal_hari_ini.shift
@@ -136,6 +148,7 @@ def submit_scan():
     else:
         return jsonify({'status': 'danger', 'message': 'Format QR tidak valid. Gunakan format S<ID> atau P<ID>.'})
 
+    # Pengecekan 'setting' di sini sekarang aman
     if not setting:
         return jsonify({'status': 'danger', 'message': 'Pengaturan waktu absensi belum diatur oleh admin.'})
 

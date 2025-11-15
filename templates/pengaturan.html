@@ -7,6 +7,9 @@
     {% set setting_siswa_data = setting_siswa_data if setting_siswa_data is defined else None %}
     {% set daftar_hari_libur = daftar_hari_libur if daftar_hari_libur is defined else [] %}
     {% set hari_libur_rutin_tersimpan = hari_libur_rutin_tersimpan if hari_libur_rutin_tersimpan is defined else [] %}
+    
+    {% set hari_libur_rutin_pegawai_tersimpan = hari_libur_rutin_pegawai_tersimpan if hari_libur_rutin_pegawai_tersimpan is defined else [] %}
+    
     {% set semua_hari = semua_hari if semua_hari is defined else [] %}
     {% set shifts = ['shift1', 'shift2', 'shift3', 'shift4'] %}
 
@@ -69,14 +72,15 @@
                                 aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-4">
-                        <form action="{{ url_for('kelola_hari_libur') }}" method="POST">
-                            <input type="hidden" name="action" value="simpan_rutin">
-                            <h6 class="text-dark fw-bold">1. Hari Libur Rutin Mingguan</h6>
-                            <p class="text-muted small">Centang hari yang dianggap libur setiap minggu.</p>
+                        
+                        <form action="{{ url_for('pengaturan_bp.kelola_hari_libur') }}" method="POST">
+                            <input type="hidden" name="action" value="simpan_rutin_siswa">
+                            <h6 class="text-dark fw-bold">1. Hari Libur Rutin Mingguan (Siswa)</h6>
+                            <p class="text-muted small">Centang hari yang dianggap libur setiap minggu untuk Siswa.</p>
                             <div class="d-flex flex-wrap gap-3 mb-3 p-3 bg-light rounded-3 border">
                                 {% for hari in semua_hari %}
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" name="hari_rutin"
+                                        <input class="form-check-input" type="checkbox" name="hari_rutin_siswa"
                                                value="{{ hari }}" id="check_{{ hari }}"
                                                {% if hari in hari_libur_rutin_tersimpan %}checked{% endif %}>
                                         <label class="form-check-label" for="check_{{ hari }}">
@@ -85,13 +89,34 @@
                                     </div>
                                 {% endfor %}
                             </div>
-                            <button type="submit" class="btn btn-danger px-4">Simpan Libur Rutin</button>
+                            <button type="submit" class="btn btn-danger px-4">Simpan Libur Siswa</button>
                         </form>
 
                         <hr class="my-4">
 
-                        <h6 class="text-dark fw-bold">2. Tambah Libur Spesial (Tanggal Merah)</h6>
-                        <form action="{{ url_for('kelola_hari_libur') }}" method="POST"
+                        <form action="{{ url_for('pengaturan_bp.kelola_hari_libur') }}" method="POST">
+                            <input type="hidden" name="action" value="simpan_rutin_pegawai">
+                            <h6 class="text-dark fw-bold">2. Hari Libur Rutin Mingguan (Guru & Staf)</h6>
+                            <p class="text-muted small">Centang hari libur rutin untuk Guru & Staf (Keamanan diatur di jadwal).</p>
+                            <div class="d-flex flex-wrap gap-3 mb-3 p-3 bg-light rounded-3 border">
+                                {% for hari in semua_hari %}
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="hari_rutin_pegawai"
+                                               value="{{ hari }}" id="check_pegawai_{{ hari }}"
+                                               {% if hari in hari_libur_rutin_pegawai_tersimpan %}checked{% endif %}>
+                                        <label class="form-check-label" for="check_pegawai_{{ hari }}">
+                                            {{ hari }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-danger px-4">Simpan Libur Pegawai</button>
+                        </form>
+                        
+                        <hr class="my-4">
+
+                        <h6 class="text-dark fw-bold">3. Tambah Libur Spesial (Tanggal Merah)</h6>
+                        <form action="{{ url_for('pengaturan_bp.kelola_hari_libur') }}" method="POST"
                               class="row g-3 align-items-end mb-4 pb-3 border-bottom">
                             <input type="hidden" name="action" value="tambah_spesial">
                             <div class="col-md-4">
@@ -124,7 +149,7 @@
                                         <td class="text-nowrap">{{ libur.tanggal.strftime('%d %B %Y') }}</td>
                                         <td>{{ libur.keterangan }}</td>
                                         <td class="text-end">
-                                            <form action="{{ url_for('kelola_hari_libur') }}" method="POST"
+                                            <form action="{{ url_for('pengaturan_bp.kelola_hari_libur') }}" method="POST"
                                                   onsubmit="return confirm('Yakin ingin menghapus hari libur ini?');">
                                                 <input type="hidden" name="action" value="hapus_spesial">
                                                 <input type="hidden" name="id" value="{{ libur.id }}">
@@ -151,7 +176,6 @@
             </div>
         </div>
 
-
         <div class="modal fade" id="aturWaktuSiswaModal" tabindex="-1" aria-labelledby="aturWaktuSiswaModalLabel"
              aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -161,7 +185,7 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                     </div>
-                    <form method="POST" action="{{ url_for('pengaturan') }}">
+                    <form method="POST" action="{{ url_for('pengaturan_bp.pengaturan') }}">
                         <div class="modal-body">
                             <input type="hidden" name="setting_type" value="siswa">
                             <input type="hidden" name="action" value="save_siswa">
@@ -215,7 +239,7 @@
                         </div>
                         <div class="modal-footer d-flex justify-content-between">
                             <button type="button" id="btnResetSiswa" class="btn btn-warning"
-                                    data-api-url="{{ url_for('api_get_setting_siswa') }}">
+                                    data-api-url="{{ url_for('pengaturan_bp.api_get_setting_siswa') }}">
                                 🔄 Reset Form
                             </button>
                             <button type="submit" class="btn btn-primary">💾 Simpan</button>
@@ -258,7 +282,7 @@
                                 <p class="text-muted mb-4">Berlaku untuk semua pegawai dengan Role **Guru** dan
                                     **Staf**.</p>
                                 {% set setting = setting_guru_staf %}
-                                <form method="POST" action="{{ url_for('pengaturan_pegawai') }}" class="mt-4">
+                                <form method="POST" action="{{ url_for('pengaturan_bp.pengaturan_pegawai') }}" class="mt-4">
                                     <input type="hidden" name="setting_type" value="guru_staf">
                                     <input type="hidden" name="action" value="save">
                                     <div class="card card-body shadow-lg mb-4 p-4 border-2 border-primary">
@@ -319,17 +343,19 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="d-flex justify-content-between pt-3 border-top">
+
+                                    <div class="d-flex justify-content-between pt-3 border-top mt-4">
                                         <button type="submit" name="action" value="reset" class="btn btn-outline-danger"
-                                                formaction="{{ url_for('pengaturan_pegawai') }}"
+                                                formaction="{{ url_for('pengaturan_bp.pengaturan_pegawai') }}"
                                                 {% if not setting or not setting.id %}disabled{% endif %}
                                                 onclick="return confirm('Yakin ingin mereset waktu Guru & Staf?');">
                                             Reset Waktu
                                         </button>
-                                        <button type="submit" class="btn btn-primary px-5">Simpan</button>
+                                        <button type="submit" class="btn btn-primary px-5">Simpan Waktu</button>
                                     </div>
                                 </form>
                             </div>
+                            
                             <div class="tab-pane fade" id="keamanan" role="tabpanel" aria-labelledby="keamanan-tab">
                                 <h5 class="fw-bold mb-3 text-success">Waktu Keamanan (4 Shift)</h5>
                                 <p class="text-muted">Atur rentang waktu absensi yang unik untuk setiap shift.</p>
@@ -343,7 +369,7 @@
                                         </li>
                                     {% endfor %}
                                     <li class="nav-item ms-auto" role="presentation">
-                                        <form method="POST" action="{{ url_for('pengaturan_pegawai') }}">
+                                        <form method="POST" action="{{ url_for('pengaturan_bp.pengaturan_pegawai') }}">
                                             <input type="hidden" name="action" value="reset">
                                             <input type="hidden" name="setting_type" value="keamanan_all">
                                             <button type="submit" class="btn btn-sm btn-outline-danger mt-1"
@@ -358,7 +384,7 @@
                                         {% set setting = settings_keamanan.get(shift_name) %}
                                         <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
                                              id="pills-{{ shift_name }}" role="tabpanel">
-                                            <form method="POST" action="{{ url_for('pengaturan_pegawai') }}"
+                                            <form method="POST" action="{{ url_for('pengaturan_bp.pengaturan_pegawai') }}"
                                                   class="mt-4 p-3 border rounded-3 bg-light">
                                                 <input type="hidden" name="setting_type" value="{{ shift_name }}">
                                                 <input type="hidden" name="action" value="save">
@@ -428,7 +454,7 @@
                                                 <div class="d-flex justify-content-between pt-3 border-top mt-3">
                                                     <button type="submit" name="action" value="reset"
                                                             class="btn btn-outline-danger"
-                                                            formaction="{{ url_for('pengaturan_pegawai') }}"
+                                                            formaction="{{ url_for('pengaturan_bp.pengaturan_pegawai') }}"
                                                             {% if not setting or not setting.id %}disabled{% endif %}
                                                             onclick="return confirm('Yakin ingin mereset waktu {{ shift_name.capitalize().replace('shift', 'Shift ') }}?');">
                                                         Reset

@@ -131,6 +131,7 @@ class SettingWaktuGuruStaf(db.Model):
     jam_terlambat_selesai: Mapped[time] = mapped_column(Time, nullable=True)
     jam_pulang_mulai: Mapped[time] = mapped_column(Time, nullable=False)
     jam_pulang_selesai: Mapped[time] = mapped_column(Time, nullable=False)
+    hari_libur_rutin: Mapped[str] = mapped_column(String(100), nullable=True, default='Minggu')
 
 
 # --- Model untuk Pengaturan Waktu Keamanan (Shift) ---

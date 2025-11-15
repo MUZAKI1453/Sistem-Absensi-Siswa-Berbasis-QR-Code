@@ -3,7 +3,10 @@ from datetime import datetime
 
 from flask import Blueprint, render_template, redirect, flash, url_for, request
 
-from models import Pegawai, AbsensiPegawai, db, HariLibur, SettingWaktu
+# ==============================================================================
+#  PERUBAHAN 1: Mengimpor SettingWaktuGuruStaf, BUKAN SettingWaktu
+# ==============================================================================
+from models import Pegawai, AbsensiPegawai, db, HariLibur, SettingWaktuGuruStaf
 from utils import check_admin_session
 
 # Inisialisasi Blueprint
@@ -37,13 +40,16 @@ def absensi_pegawai():
     info_hari = None
 
     # ==============================================================================
-    #  INTEGRASI: Lakukan Pengecekan Hari Libur Berlapis
+    #  PERUBAHAN 2: Logika pengecekan hari libur diubah
+    #  Sekarang memeriksa SettingWaktuGuruStaf, bukan SettingWaktu (milik siswa)
     # ==============================================================================
-    setting = SettingWaktu.query.first()
-    if setting and setting.hari_libur_rutin:
-        if nama_hari_id in setting.hari_libur_rutin.split(','):
-            info_hari = f"Tanggal {tanggal_obj.strftime('%d %B %Y')} adalah hari libur rutin ({nama_hari_id})."
+    setting_pegawai = SettingWaktuGuruStaf.query.first()
+    if setting_pegawai and setting_pegawai.hari_libur_rutin:
+        if nama_hari_id in setting_pegawai.hari_libur_rutin.split(','):
+            info_hari = f"Tanggal {tanggal_obj.strftime('%d %B %Y')} adalah hari libur rutin Pegawai ({nama_hari_id})."
+    # ==============================================================================
 
+    # Pengecekan libur spesial (tanggal merah) tetap sama
     if not info_hari:
         libur_spesial = HariLibur.query.filter_by(tanggal=tanggal_obj).first()
         if libur_spesial:
@@ -51,7 +57,7 @@ def absensi_pegawai():
 
     data_absensi_terurut = []
     if not info_hari:
-        # --- FITUR ASLI: Jalankan logika pengambilan data jika bukan hari libur ---
+        # --- (Sisa logika di bawah ini tidak berubah) ---
         role_filter = request.args.get("role_filter")
         cari_nama = request.args.get("cari_nama")
         status_filter = request.args.get("status")
@@ -102,7 +108,7 @@ def absensi_pegawai():
         role_filter=request.args.get("role_filter"),
         cari_nama=request.args.get("cari_nama"),
         status=request.args.get("status"),
-        info_hari=info_hari,  # Kirim info hari libur ke template
+        info_hari=info_hari,  # Kirim info hari libur yang TEPAT ke template
         tanggal_dipilih=tanggal_obj
     )
 
@@ -140,7 +146,7 @@ def update_absensi_pegawai(no_id):
     status = request.form.get("status")
     role_filter = request.form.get("role_filter")
     cari_nama = request.form.get("cari_nama")
-    tanggal = datetime.today().date()
+    tanggal = datetime.today().date() # Catatan: ini selalu hari ini
 
     if not status or not no_id:
         flash("Status atau No ID tidak valid.", "danger")
@@ -194,6 +200,7 @@ def update_absensi_pegawai(no_id):
 
 # =======================================================================
 #  ROUTE BARU: UBAH STATUS ABSENSI PEGAWAI SECARA MASAL
+#  (Tidak ada perubahan, fungsi ini sudah benar)
 # =======================================================================
 @absensi_pegawai_bp.route("/update_status_masal", methods=["POST"])
 def update_status_masal():
